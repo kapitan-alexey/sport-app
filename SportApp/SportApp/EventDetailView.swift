@@ -52,6 +52,97 @@ struct SafariView: UIViewControllerRepresentable {
     }
 }
 
+// MARK: - Files View
+struct EventFilesView: View {
+    let files: [EventFile]
+    @Environment(\.dismiss) private var dismiss
+    @State private var showingSafari = false
+    @State private var selectedFileURL: URL?
+    
+    var body: some View {
+        NavigationView {
+            ZStack {
+                Color.black.ignoresSafeArea()
+                
+                if files.isEmpty {
+                    VStack {
+                        Image(systemName: "doc.text")
+                            .font(.system(size: 60))
+                            .foregroundColor(.gray)
+                        Text("Файлы отсутствуют")
+                            .font(.title2)
+                            .foregroundColor(.gray)
+                            .padding(.top, 16)
+                    }
+                } else {
+                    ScrollView {
+                        LazyVStack(spacing: 12) {
+                            ForEach(files) { file in
+                                Button(action: {
+                                    openFile(file)
+                                }) {
+                                    HStack {
+                                        Image(systemName: "doc.fill")
+                                            .font(.title2)
+                                            .foregroundColor(Color(red: 18/255, green: 250/255, blue: 210/255))
+                                        
+                                        Text(file.name)
+                                            .font(.body)
+                                            .foregroundColor(.white)
+                                            .multilineTextAlignment(.leading)
+                                        
+                                        Spacer()
+                                        
+                                        Image(systemName: "arrow.up.right")
+                                            .font(.caption)
+                                            .foregroundColor(.white.opacity(0.6))
+                                    }
+                                    .padding(.horizontal, 16)
+                                    .padding(.vertical, 12)
+                                    .background(
+                                        RoundedRectangle(cornerRadius: 12)
+                                            .fill(Color.white.opacity(0.1))
+                                            .stroke(Color.white.opacity(0.2), lineWidth: 1)
+                                    )
+                                }
+                                .buttonStyle(PlainButtonStyle())
+                            }
+                        }
+                        .padding(.horizontal, 16)
+                        .padding(.top, 20)
+                    }
+                }
+            }
+            .navigationTitle("Файлы")
+            .navigationBarTitleDisplayMode(.large)
+            .toolbar {
+                ToolbarItem(placement: .navigationBarTrailing) {
+                    Button("Готово") {
+                        dismiss()
+                    }
+                    .foregroundColor(Color(red: 18/255, green: 250/255, blue: 210/255))
+                }
+            }
+        }
+        .sheet(isPresented: $showingSafari) {
+            if let url = selectedFileURL {
+                SafariView(url: url)
+            }
+        }
+    }
+    
+    private func openFile(_ file: EventFile) {
+        guard let url = URL(string: file.fileUrl) else { return }
+        
+        // Haptic feedback
+        let impactFeedback = UIImpactFeedbackGenerator(style: .light)
+        impactFeedback.impactOccurred()
+        
+        selectedFileURL = url
+        showingSafari = true
+    }
+}
+
 // MARK: - Event Detail View
 struct EventDetailView: View {
     let event: SportEvent
@@ -61,6 +152,7 @@ struct EventDetailView: View {
     @State private var showingRegistrationAlert = false
     @State private var registrationAlertMessage = ""
     @State private var showingFullDescription = false
+    @State private var showingFiles = false
 
     var body: some View {
         ScrollView {
@@ -140,6 +232,11 @@ struct EventDetailView: View {
                     .padding(.horizontal, 16)
                     .padding(.top, 24)
 
+                // Files Section
+                filesSection
+                    .padding(.horizontal, 16)
+                    .padding(.top, 24)
+
                 // Location
                 locationSection
                     .padding(.horizontal, 16)
@@ -171,6 +268,9 @@ struct EventDetailView: View {
                let url = URL(string: websiteUrl) {
                 SafariView(url: url)
             }
+        }
+        .sheet(isPresented: $showingFiles) {
+            EventFilesView(files: event.files)
         }
         .alert("Уведомление", isPresented: $showingRegistrationAlert) {
             Button("OK") { }
@@ -266,6 +366,56 @@ struct EventDetailView: View {
                 }
             } else {
                 Text("Дистанции уточняются")
+                    .font(.body)
+                    .foregroundColor(.white.opacity(0.6))
+            }
+        }
+        .frame(maxWidth: .infinity, alignment: .leading)
+    }
+
+    // Files Section
+    private var filesSection: some View {
+        VStack(alignment: .leading, spacing: 16) {
+            Text("Файлы")
+                .font(.title2)
+                .fontWeight(.semibold)
+                .foregroundColor(.white)
+            
+            if !event.files.isEmpty {
+                Button(action: {
+                    showingFiles = true
+                }) {
+                    HStack {
+                        Image(systemName: "doc.text.fill")
+                            .font(.title2)
+                            .foregroundColor(Color(red: 18/255, green: 250/255, blue: 210/255))
+                        
+                        VStack(alignment: .leading, spacing: 4) {
+                            Text("Документы")
+                                .font(.headline)
+                                .foregroundColor(.white)
+                            Text("\(event.files.count) файл(ов)")
+                                .font(.caption)
+                                .foregroundColor(.white.opacity(0.6))
+                        }
+                        
+                        Spacer()
+                        
+                        Image(systemName: "chevron.right")
+                            .font(.caption)
+                            .foregroundColor(.white.opacity(0.6))
+                    }
+                    .padding(.horizontal, 16)
+                    .padding(.vertical, 12)
+                    .background(
+                        RoundedRectangle(cornerRadius: 12)
+                            .fill(Color.white.opacity(0.1))
+                            .stroke(Color.white.opacity(0.2), lineWidth: 1)
+                    )
+                }
+                .buttonStyle(PlainButtonStyle())
+            } else {
+                Text("Файлы отсутствуют")
                     .font(.body)
                     .foregroundColor(.white.opacity(0.6))
             }
@@ -498,6 +648,7 @@ struct EventDetailView: View {
         // Открываем сайт через встроенный Safari
         showingWebsiteSafari = true
     }
+
     
     // ✅ НОВАЯ функция обработки регистрации
     private func handleRegistrationWithSafari() {
