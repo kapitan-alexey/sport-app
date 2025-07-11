@@ -18,6 +18,18 @@ struct City: Codable, Identifiable, Hashable {
     let name: String
 }
 
+// MARK: - EventFile Model
+struct EventFile: Codable, Identifiable {
+    let id = UUID()
+    let name: String
+    let fileUrl: String
+    
+    enum CodingKeys: String, CodingKey {
+        case name
+        case fileUrl = "file_url"
+    }
+}
+
 // MARK: - SportEvent Model
 struct SportEvent: Codable, Identifiable {
     let id: Int
@@ -47,6 +59,7 @@ struct SportEvent: Codable, Identifiable {
     let cityId: Int
     let city: City
     let sports: [Sport]
+    let files: [EventFile]
     let cityName: String
     let sportName: String
     let isUpcoming: Bool
@@ -56,7 +69,7 @@ struct SportEvent: Codable, Identifiable {
     let availableDistancesArray: [String]
     
     enum CodingKeys: String, CodingKey {
-        case id, name, date, organizer, address, latitude, longitude, price, city, sports
+        case id, name, date, organizer, address, latitude, longitude, price, city, sports, files
         case photoMain = "photo_main"
         case iconNames = "icon_names"
         case fullDescription = "full_description"
