@@ -155,11 +155,11 @@ struct EventDetailView: View {
     @State private var showingFiles = false
 
     var body: some View {
-        ScrollView {
-            LazyVStack(spacing: 0) {
-                // Header Image with Back Button
-                ZStack(alignment: .topLeading) {
-                    // ✅ Используем CachedAsyncImage для мгновенного отображения кешированных изображений
+        ZStack {
+            // Основной контент
+            ScrollView {
+                LazyVStack(spacing: 0) {
+                    // ✅ Header Image БЕЗ ignoresSafeArea
                     CachedAsyncImage(
                         url: URL(string: event.fullPhotoMainURL ?? "")
                     ) { image in
@@ -203,56 +203,77 @@ struct EventDetailView: View {
                     .frame(height: 300)
                     .clipped()
 
-                    // Back Button
-                    Button(action: {
-                        dismiss()
-                    }) {
-                        Image(systemName: "chevron.left")
-                            .font(.title2)
-                            .foregroundColor(.white)
-                            .padding(12)
-                            .background(Circle().fill(Color.black.opacity(0.4)))
-                    }
-                    .padding(.top, 8)
-                    .padding(.leading, 34)
+                    // Title and Basic Info
+                    titleSection
+                        .padding(.horizontal, 16)
+                        .padding(.top, 20)
+
+                    // Description
+                    descriptionSection
+                        .padding(.horizontal, 16)
+                        .padding(.top, 20)
+
+                    // Distances
+                    distancesSection
+                        .padding(.horizontal, 16)
+                        .padding(.top, 24)
+
+                    // Files Section
+                    filesSection
+                        .padding(.horizontal, 16)
+                        .padding(.top, 24)
+
+                    // Location
+                    locationSection
+                        .padding(.horizontal, 16)
+                        .padding(.top, 24)
+
+                    // Contacts
+                    contactsSection
+                        .padding(.horizontal, 16)
+                        .padding(.top, 24)
+
+                    // Registration Button
+                    registrationButton
+                        .padding(.horizontal, 16)
+                        .padding(.top, 32)
+                    
+                    Spacer().frame(height: 100)
                 }
-
-                // Title and Basic Info
-                titleSection
-                    .padding(.horizontal, 16)
-                    .padding(.top, 20)
-
-                // Description
-                descriptionSection
-                    .padding(.horizontal, 16)
-                    .padding(.top, 20)
-
-                // Distances
-                distancesSection
-                    .padding(.horizontal, 16)
-                    .padding(.top, 24)
-
-                // Files Section
-                filesSection
-                    .padding(.horizontal, 16)
-                    .padding(.top, 24)
-
-                // Location
-                locationSection
-                    .padding(.horizontal, 16)
-                    .padding(.top, 24)
-
-                // Contacts
-                contactsSection
-                    .padding(.horizontal, 16)
-                    .padding(.top, 24)
-
-                // Registration Button
-                registrationButton
-                    .padding(.horizontal, 16)
-                    .padding(.top, 32)
-                
-                Spacer().frame(height: 100)
+            }
+            .ignoresSafeArea(edges: .top) // ✅ Только ScrollView игнорирует Safe Area
+            
+            // ✅ КНОПКА НАЗАД через safeAreaInset с правильным вертикальным позиционированием
+            VStack {
+                Spacer()
+            }
+            .safeAreaInset(edge: .top) {
+                VStack(spacing: 0) {
+                    Spacer().frame(height: 8) // ✅ Отступ сверху от Safe Area
+                    
+                    HStack {
+                        Button(action: {
+                            dismiss()
+                        }) {
+                            Image(systemName: "chevron.left")
+                                .font(.title2)
+                                .fontWeight(.semibold)
+                                .foregroundColor(.white)
+                                .frame(width: 44, height: 44)
+                                .background(
+                                    Circle()
+                                        .fill(Color.black.opacity(0.6))
+                                        .shadow(color: .black.opacity(0.3), radius: 4, x: 0, y: 2)
+                                )
+                        }
+                        .padding(.leading, 16)
+                        
+                        Spacer()
+                    }
+                    
+                    Spacer().frame(height: 8) // ✅ Отступ снизу
+                }
+                .background(Color.clear)
             }
         }
         .background(Color.black)
