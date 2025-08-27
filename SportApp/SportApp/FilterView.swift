@@ -99,7 +99,7 @@ struct FilterView: View {
                     // City Search Section
                     VStack(alignment: .leading, spacing: 15) {
                         HStack {
-                            Text("City")
+                            Text("Города")
                                 .foregroundColor(.white)
                                 .font(.title2)
                                 .fontWeight(.semibold)
@@ -120,7 +120,7 @@ struct FilterView: View {
                         HStack {
                             Image(systemName: "magnifyingglass")
                                 .foregroundColor(.gray)
-                            TextField("Search city", text: $searchText)
+                            TextField("Выберите город", text: $searchText)
                                 .foregroundColor(.white)
                         }
                         .padding()
@@ -159,7 +159,7 @@ struct FilterView: View {
                     // Date Section
                     VStack(alignment: .leading, spacing: 15) {
                         HStack {
-                            Text("Date")
+                            Text("Даты")
                                 .foregroundColor(.white)
                                 .font(.title2)
                                 .fontWeight(.semibold)
@@ -195,7 +195,7 @@ struct FilterView: View {
                     // Sport Types Section
                     VStack(alignment: .leading, spacing: 15) {
                         HStack {
-                            Text("Sport Types")
+                            Text("Виды спорта")
                                 .foregroundColor(.white)
                                 .font(.title2)
                                 .fontWeight(.semibold)
@@ -266,18 +266,18 @@ struct FilterView: View {
                     )
                 }
             }
-            .navigationTitle("Filter")
+            .navigationTitle("Фильтр")
             .navigationBarTitleDisplayMode(.inline)
             .toolbar {
                 ToolbarItem(placement: .navigationBarLeading) {
-                    Button("Cancel") {
+                    Button("Отменить") {
                         dismiss()
                     }
                     .foregroundColor(Color(red: 0.0, green: 0.8, blue: 0.7))
                 }
                 
                 ToolbarItem(placement: .navigationBarTrailing) {
-                    Button("Done") {
+                    Button("Применить") {
                         // Применяем фильтры
                         filterCriteria.selectedCities = selectedCities
                         filterCriteria.selectedSports = selectedSports
@@ -416,7 +416,7 @@ struct DatePickerOverlay: View {
             
             VStack(spacing: 20) {
                 HStack {
-                    Text("Select Date Range")
+                    Text("Выберите период")
                         .foregroundColor(.white)
                         .font(.headline)
                     
@@ -435,7 +435,7 @@ struct DatePickerOverlay: View {
                 
                 VStack(spacing: 15) {
                     VStack(alignment: .leading) {
-                        Text("Start Date")
+                        Text("От:")
                             .foregroundColor(.gray)
                             .font(.caption)
                         DatePicker("", selection: $startDate, displayedComponents: .date)
@@ -444,7 +444,7 @@ struct DatePickerOverlay: View {
                     }
                     
                     VStack(alignment: .leading) {
-                        Text("End Date")
+                        Text("До:")
                             .foregroundColor(.gray)
                             .font(.caption)
                         DatePicker("", selection: $endDate, displayedComponents: .date)
@@ -454,7 +454,7 @@ struct DatePickerOverlay: View {
                 }
                 
                 HStack(spacing: 20) {
-                    Button("Cancel") {
+                    Button("Отмена") {
                         isShowing = false
                     }
                     .foregroundColor(.red)
@@ -463,7 +463,7 @@ struct DatePickerOverlay: View {
                     .background(Color.gray.opacity(0.2))
                     .cornerRadius(10)
                     
-                    Button("Done") {
+                    Button("Применить") {
                         isShowing = false
                     }
                     .foregroundColor(Color(red: 0.0, green: 0.8, blue: 0.7))
