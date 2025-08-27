@@ -70,7 +70,7 @@ struct EventFilesView: View {
                             .font(.system(size: 60))
                             .foregroundColor(.gray)
                         Text("Файлы отсутствуют")
-                            .font(.title2)
+                            .font(.appTitle2)
                             .foregroundColor(.gray)
                             .padding(.top, 16)
                     }
@@ -87,7 +87,7 @@ struct EventFilesView: View {
                                             .foregroundColor(Color(red: 18/255, green: 250/255, blue: 210/255))
                                         
                                         Text(file.name)
-                                            .font(.body)
+                                            .font(.appBody)
                                             .foregroundColor(.white)
                                             .multilineTextAlignment(.leading)
                                         
@@ -304,31 +304,24 @@ struct EventDetailView: View {
     private var titleSection: some View {
         VStack(alignment: .leading, spacing: 12) {
             Text(event.name)
-                .font(.largeTitle)
-                .fontWeight(.bold)
+                .font(.appEventDetailTitle)
                 .foregroundColor(.white)
 
             HStack {
                 Image(systemName: "flag.fill")
                     .foregroundColor(Color(red: 18/255, green: 250/255, blue: 210/255))
                 Text("\(event.cityName) • \(event.shortFormattedDate)")
-                    .font(.headline)
+                    .font(.appEventDetailSubheadline)
                     .foregroundColor(.white.opacity(0.8))
 
                 Spacer()
 
                 HStack(spacing: 4) {
                     ForEach(event.sports.prefix(3), id: \.id) { sport in
-                        Circle()
-                            .fill(Color(red: 18/255, green: 250/255, blue: 210/255))
+                        Image(customIconName(for: sport.name))
+                            .resizable()
+                            .scaledToFit()
                             .frame(width: 32, height: 32)
-                            .overlay(
-                                Image(customIconName(for: sport.name))
-                                    .resizable()
-                                    .scaledToFit()
-                                    .frame(width: 18, height: 18)
-                                    .foregroundColor(.black)
-                            )
                     }
                 }
             }
@@ -341,7 +334,7 @@ struct EventDetailView: View {
         VStack(alignment: .leading, spacing: 12) {
             // Отображаем короткое или полное описание в зависимости от состояния
             Text(descriptionText)
-                .font(.body)
+                .font(.custom("HelveticaNeue", size: 15))
                 .foregroundColor(.white.opacity(0.9))
                 .lineLimit(showingFullDescription ? nil : 3)
                 .animation(.easeInOut(duration: 0.3), value: showingFullDescription)
@@ -354,7 +347,7 @@ struct EventDetailView: View {
                     }
                 }) {
                     Text(showingFullDescription ? "Свернуть" : "Подробнее")
-                        .font(.body)
+                        .font(.appEventDetailBody)
                         .foregroundColor(Color(red: 18/255, green: 250/255, blue: 210/255))
                 }
             }
@@ -364,30 +357,34 @@ struct EventDetailView: View {
 
     // Distances Section
     private var distancesSection: some View {
-        VStack(alignment: .leading, spacing: 16) {
+        VStack(alignment: .leading, spacing: 12) {
             Text("Дистанции")
-                .font(.title2)
-                .fontWeight(.semibold)
+                .font(.appEventDetailSectionTitle)
                 .foregroundColor(.white)
             
             if !event.availableDistancesArray.isEmpty {
-                LazyVGrid(columns: Array(repeating: GridItem(.flexible()), count: 3), spacing: 12) {
-                    ForEach(event.availableDistancesArray, id: \.self) { distance in
-                        Text(distance)
-                            .font(.body)
-                            .foregroundColor(.white.opacity(0.8))
-                            .padding(.horizontal, 16)
-                            .padding(.vertical, 8)
-                            .background(
-                                RoundedRectangle(cornerRadius: 20)
-                                    .fill(Color.white.opacity(0.1))
-                                    .stroke(Color.white.opacity(0.3), lineWidth: 1)
-                            )
+                // Горизонтальный скролл с компактными элементами
+                ScrollView(.horizontal, showsIndicators: false) {
+                    HStack(spacing: 8) {
+                        ForEach(event.availableDistancesArray, id: \.self) { distance in
+                            Text(distance)
+                                .font(.custom("HelveticaNeue-Medium", size: 14))
+                                .foregroundColor(.white)
+                                .padding(.horizontal, 12)
+                                .padding(.vertical, 6)
+                                .background(
+                                    RoundedRectangle(cornerRadius: 16)
+                                        .fill(Color(red: 18/255, green: 250/255, blue: 210/255).opacity(0.15))
+                                        .stroke(Color(red: 18/255, green: 250/255, blue: 210/255).opacity(0.4), lineWidth: 1)
+                                )
+                        }
                     }
+                    .padding(.horizontal, 16)
                 }
+                .padding(.horizontal, -16) // Компенсируем внешний отступ
             } else {
                 Text("Дистанции уточняются")
-                    .font(.body)
+                    .font(.appEventDetailBody)
                     .foregroundColor(.white.opacity(0.6))
             }
         }
@@ -398,8 +395,7 @@ struct EventDetailView: View {
     private var filesSection: some View {
         VStack(alignment: .leading, spacing: 16) {
             Text("Файлы")
-                .font(.title2)
-                .fontWeight(.semibold)
+                .font(.appEventDetailSectionTitle)
                 .foregroundColor(.white)
             
             if !event.files.isEmpty {
@@ -413,10 +409,10 @@ struct EventDetailView: View {
                         
                         VStack(alignment: .leading, spacing: 4) {
                             Text("Документы")
-                                .font(.headline)
+                                .font(.appHeadline)
                                 .foregroundColor(.white)
                             Text("\(event.files.count) файл(ов)")
-                                .font(.caption)
+                                .font(.appCaption1)
                                 .foregroundColor(.white.opacity(0.6))
                         }
                         
@@ -437,7 +433,7 @@ struct EventDetailView: View {
                 .buttonStyle(PlainButtonStyle())
             } else {
                 Text("Файлы отсутствуют")
-                    .font(.body)
+                    .font(.appEventDetailBody)
                     .foregroundColor(.white.opacity(0.6))
             }
         }
@@ -448,13 +444,12 @@ struct EventDetailView: View {
     private var locationSection: some View {
         VStack(alignment: .leading, spacing: 16) {
             Text("Место проведения")
-                .font(.title2)
-                .fontWeight(.semibold)
+                .font(.appEventDetailSectionTitle)
                 .foregroundColor(.white)
             
             if let address = event.address, !address.isEmpty {
                 Text(address)
-                    .font(.body)
+                    .font(.appEventDetailBody)
                     .foregroundColor(.white.opacity(0.8))
             }
             
@@ -472,7 +467,7 @@ struct EventDetailView: View {
                     openInMaps()
                 }) {
                     Text("Показать на карте")
-                        .font(.body)
+                        .font(.appEventDetailBody)
                         .foregroundColor(Color(red: 18/255, green: 250/255, blue: 210/255))
                 }
             }
@@ -484,8 +479,7 @@ struct EventDetailView: View {
     private var contactsSection: some View {
         VStack(alignment: .leading, spacing: 16) {
             Text("Контакты")
-                .font(.title2)
-                .fontWeight(.semibold)
+                .font(.appEventDetailSectionTitle)
                 .foregroundColor(.white)
             
             VStack(alignment: .leading, spacing: 8) {
@@ -494,22 +488,8 @@ struct EventDetailView: View {
                         Image(systemName: "person.fill")
                             .foregroundColor(Color(red: 18/255, green: 250/255, blue: 210/255))
                         Text("Организатор: \(organizer)")
-                            .font(.body)
+                            .font(.appEventDetailBody)
                             .foregroundColor(.white.opacity(0.8))
-                    }
-                }
-                
-                if let phone = event.contactPhone, !phone.isEmpty {
-                    Button(action: {
-                        callPhone(phone)
-                    }) {
-                        HStack {
-                            Image(systemName: "phone.fill")
-                                .foregroundColor(Color(red: 18/255, green: 250/255, blue: 210/255))
-                            Text(phone)
-                                .font(.body)
-                                .foregroundColor(Color(red: 18/255, green: 250/255, blue: 210/255))
-                        }
                     }
                 }
                 
@@ -521,11 +501,26 @@ struct EventDetailView: View {
                             Image(systemName: "envelope.fill")
                                 .foregroundColor(Color(red: 18/255, green: 250/255, blue: 210/255))
                             Text(email)
-                                .font(.body)
+                                .font(.appEventDetailBody)
+                                .foregroundColor(.white.opacity(0.8))
+                        }
+                    }
+                }
+                
+                if let phone = event.contactPhone, !phone.isEmpty {
+                    Button(action: {
+                        callPhone(phone)
+                    }) {
+                        HStack {
+                            Image(systemName: "phone.fill")
+                                .foregroundColor(Color(red: 18/255, green: 250/255, blue: 210/255))
+                            Text(phone)
+                                .font(.appEventDetailBody)
                                 .foregroundColor(Color(red: 18/255, green: 250/255, blue: 210/255))
                         }
                     }
                 }
+
                 
                 // Кнопка сайта
                 if let websiteUrl = event.websiteUrl, !websiteUrl.isEmpty {
@@ -536,7 +531,7 @@ struct EventDetailView: View {
                             Image(systemName: "globe")
                                 .foregroundColor(Color(red: 18/255, green: 250/255, blue: 210/255))
                             Text(cleanURL(websiteUrl))
-                                .font(.body)
+                                .font(.appEventDetailBody)
                                 .foregroundColor(Color(red: 18/255, green: 250/255, blue: 210/255))
                         }
                     }
@@ -549,11 +544,11 @@ struct EventDetailView: View {
     // ✅ НОВАЯ Registration Button с встроенным Safari
     private var registrationButton: some View {
         VStack(spacing: 12) {
-            if let price = event.price, !price.isEmpty {
-                Text("Цена: \(price)")
-                    .font(.headline)
-                    .foregroundColor(.white)
-            }
+//            if let price = event.price, !price.isEmpty {
+//                Text("Цена: \(price)")
+//                    .font(.appHeadline)
+//                    .foregroundColor(.white)
+//            }
             
             Button(action: {
                 handleRegistrationWithSafari()
@@ -564,7 +559,7 @@ struct EventDetailView: View {
                             .font(.title3)
                     }
                     Text(event.canRegister ? "Зарегистрироваться" : "Регистрация закрыта")
-                        .font(.headline)
+                        .font(.appHeadline)
                 }
                 .foregroundColor(.black)
                 .frame(maxWidth: .infinity)
