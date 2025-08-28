@@ -9,52 +9,80 @@ struct ContentView: View {
     @State private var showingCacheSettings = false
 
     var body: some View {
-        TabView(selection: $selectedTab) {
-            // События таба
-            NavigationView {
-                ZStack {
-                    Color.black.ignoresSafeArea(.all)
+        VStack(spacing: 0) {
+            // Основной контент
+            if selectedTab == 0 {
+                NavigationView {
+                    ZStack {
+                        Color.black.ignoresSafeArea(.all)
 
-                    VStack(spacing: 0) {
-                        // Заголовок с индикаторами кеша
-                        HeaderView(
-                            searchText: $searchText,
-                            filterCriteria: $filterCriteria,
-                            eventsManager: eventsManager,
-                            showingCacheSettings: $showingCacheSettings
-                        )
-                        .padding(.horizontal, 16)
-                        .padding(.top, 8)
+                        VStack(spacing: 0) {
+                            // Заголовок с индикаторами кеша
+                            HeaderView(
+                                searchText: $searchText,
+                                filterCriteria: $filterCriteria,
+                                eventsManager: eventsManager,
+                                showingCacheSettings: $showingCacheSettings
+                            )
+                            .padding(.horizontal, 16)
+                            .padding(.top, 8)
 
-                        Spacer().frame(height: 16)
+                            Spacer().frame(height: 16)
 
-                        // Основной контент с умной логикой загрузки
-                        MainContentView(
-                            eventsManager: eventsManager,
-                            filteredEvents: filteredEvents
-                        )
+                            // Основной контент с умной логикой загрузки
+                            MainContentView(
+                                eventsManager: eventsManager,
+                                filteredEvents: filteredEvents
+                            )
+                        }
                     }
                 }
+            } else {
+                FavoritesView()
             }
-            .tabItem {
-                Image(systemName: "calendar.badge.plus")
-                Text("События")
+            
+            // Кастомный TabBar
+            HStack {
+                Spacer()
+                
+                Button(action: {
+                    selectedTab = 0
+                }) {
+                    VStack(spacing: 4) {
+                        Image(systemName: "calendar.badge.plus")
+                            .font(.title2)
+                            .foregroundColor(selectedTab == 0 ? Color(red: 18/255, green: 250/255, blue: 210/255) : .gray)
+                        Text("События")
+                            .font(.caption)
+                            .foregroundColor(selectedTab == 0 ? Color(red: 18/255, green: 250/255, blue: 210/255) : .gray)
+                    }
+                }
+                
+                Spacer()
+                
+                Button(action: {
+                    selectedTab = 1
+                }) {
+                    VStack(spacing: 4) {
+                        Image(systemName: "heart")
+                            .font(.title2)
+                            .foregroundColor(selectedTab == 1 ? Color(red: 18/255, green: 250/255, blue: 210/255) : .gray)
+                        Text("Избранное")
+                            .font(.caption)
+                            .foregroundColor(selectedTab == 1 ? Color(red: 18/255, green: 250/255, blue: 210/255) : .gray)
+                    }
+                }
+                
+                Spacer()
             }
-            .tag(0)
-
-            CalendarView()
-                .tabItem {
-                    Image(systemName: "calendar")
-                    Text("Календарь")
-                }
-                .tag(1)
-
-            FavoritesView()
-                .tabItem {
-                    Image(systemName: "star")
-                    Text("Избранное")
-                }
-                .tag(2)
+            .padding(.vertical, 12)
+            .background(Color.black)
+            .overlay(
+                Rectangle()
+                    .frame(height: 0.5)
+                    .foregroundColor(Color.gray.opacity(0.3)),
+                alignment: .top
+            )
         }
         .accentColor(Color(red: 0.0, green: 0.8, blue: 0.7))
         .preferredColorScheme(.dark)
@@ -94,14 +122,9 @@ struct ContentView: View {
     
     // MARK: - Private Methods
     
-    /// Настраивает внешний вид TabBar
+    /// Настраивает внешний вид TabBar (теперь не используется, но оставлено для совместимости)
     private func setupTabBarAppearance() {
-        let appearance = UITabBarAppearance()
-        appearance.configureWithOpaqueBackground()
-        appearance.backgroundColor = UIColor.black
-
-        UITabBar.appearance().standardAppearance = appearance
-        UITabBar.appearance().scrollEdgeAppearance = appearance
+        // Убираем стандартный TabBar, так как используем кастомный
     }
     
     /// Обрабатывает первичную загрузку данных при запуске приложения
@@ -270,21 +293,66 @@ struct CalendarView: View {
 }
 
 struct FavoritesView: View {
+    @StateObject private var eventsManager = EventsDataManager()
+    @ObservedObject private var favoritesManager = FavoritesManager.shared
+    
     var body: some View {
-        ZStack {
-            Color.black.ignoresSafeArea()
-            VStack {
-                Text("Избранное")
-                    .font(.largeTitle)
-                    .fontWeight(.bold)
-                    .foregroundColor(.white)
-                Text("Здесь будут избранные события")
-                    .font(.subheadline)
-                    .foregroundColor(.gray)
-                    .multilineTextAlignment(.center)
-                    .padding()
+        NavigationView {
+            ZStack {
+                Color.black.ignoresSafeArea()
+                
+                if favoriteEvents.isEmpty {
+                    // Пустое состояние
+                    VStack(spacing: 20) {
+                        Image(systemName: "heart.slash")
+                            .font(.system(size: 60))
+                            .foregroundColor(.gray)
+                        
+                        Text("Нет избранных событий")
+                            .font(.appTitle2)
+                            .foregroundColor(.white)
+                        
+                        Text("Добавьте события в избранное, нажав на ♡ в описании события")
+                            .font(.appBody)
+                            .foregroundColor(.gray)
+                            .multilineTextAlignment(.center)
+                            .padding(.horizontal, 32)
+                    }
+                } else {
+                    // Список избранных событий
+                    ScrollView {
+                        LazyVStack(spacing: 12) {
+                            ForEach(favoriteEvents) { event in
+                                NavigationLink(destination: EventDetailView(event: event)) {
+                                    EventCardView(event: event)
+                                }
+                                .buttonStyle(PlainButtonStyle())
+                            }
+                        }
+                        .padding(.horizontal, 16)
+                        .padding(.top, 20)
+                    }
+                }
+            }
+            .navigationTitle("Избранное")
+            .navigationBarTitleDisplayMode(.large)
+            .onAppear {
+                // Загружаем события если их еще нет
+                if eventsManager.events.isEmpty {
+                    Task {
+                        await eventsManager.loadEvents()
+                    }
+                }
             }
         }
+        .preferredColorScheme(.dark)
+    }
+    
+    // MARK: - Computed Properties
+    
+    /// Получает избранные события из загруженных данных
+    private var favoriteEvents: [SportEvent] {
+        return favoritesManager.getFavoriteEvents(from: eventsManager.events)
     }
 }
 

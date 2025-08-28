@@ -8,7 +8,8 @@ import UIKit
 class ApiService: ObservableObject {
     static let shared = ApiService()
     
-    private let baseURL = "http://192.168.0.136:8000"
+//    private let baseURL = "http://192.168.0.136:8000"
+    private let baseURL = "http://192.168.0.126:8000"
     private let session: URLSession
     private let cache = SportsEventsCache.shared
     
