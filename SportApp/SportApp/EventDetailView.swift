@@ -153,6 +153,7 @@ struct EventDetailView: View {
     @State private var registrationAlertMessage = ""
     @State private var showingFullDescription = false
     @State private var showingFiles = false
+    @ObservedObject private var favoritesManager = FavoritesManager.shared
 
     var body: some View {
         ZStack {
@@ -302,10 +303,27 @@ struct EventDetailView: View {
 
     // Title Section
     private var titleSection: some View {
-        VStack(alignment: .leading, spacing: 12) {
-            Text(event.name)
-                .font(.appEventDetailTitle)
-                .foregroundColor(.white)
+        VStack(alignment: .leading, spacing: 16) {
+            HStack(alignment: .top) {
+                Text(event.name)
+                    .font(.appEventDetailTitle)
+                    .foregroundColor(.white)
+                    .frame(maxWidth: .infinity, alignment: .leading)
+                
+                Button(action: {
+                    withAnimation(.easeInOut(duration: 0.2)) {
+                        favoritesManager.toggleFavorite(eventID: event.id)
+                    }
+                    
+                    // Haptic feedback
+                    let impactFeedback = UIImpactFeedbackGenerator(style: .light)
+                    impactFeedback.impactOccurred()
+                }) {
+                    Image(systemName: favoritesManager.isFavorite(eventID: event.id) ? "heart.fill" : "heart")
+                        .font(.title2)
+                        .foregroundColor(favoritesManager.isFavorite(eventID: event.id) ? Color(red: 18/255, green: 250/255, blue: 210/255) : .white)
+                }
+            }
 
             HStack {
                 Image(systemName: "flag.fill")
