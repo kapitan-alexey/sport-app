@@ -1,4 +1,5 @@
 import SwiftUI
+import FirebaseAnalytics
 
 // MARK: - Main Content View with Enhanced Caching
 struct ContentView: View {
@@ -27,6 +28,13 @@ struct ContentView: View {
                             .padding(.horizontal, 16)
                             .padding(.top, 8)
 
+                            // Активные фильтры
+                            if filterCriteria.hasActiveFilters {
+                                ActiveFiltersView(filterCriteria: $filterCriteria)
+                                    .padding(.horizontal, 16)
+                                    .padding(.top, 12)
+                            }
+                            
                             Spacer().frame(height: 16)
 
                             // Основной контент с умной логикой загрузки
@@ -37,43 +45,85 @@ struct ContentView: View {
                         }
                     }
                 }
-            } else {
+            } else if selectedTab == 1 {
                 FavoritesView()
+            } else {
+                SettingsView()
             }
             
             // Кастомный TabBar
-            HStack {
-                Spacer()
-                
+            HStack(spacing: 0) {
                 Button(action: {
+                    let previousTab = selectedTab
                     selectedTab = 0
+                    
+                    // Логируем переключение табов
+                    if previousTab != 0 {
+                        Analytics.logEvent("tab_switched", parameters: [
+                            "tab_name": "events",
+                            "previous_tab": previousTab == 1 ? "favorites" : "unknown"
+                        ])
+                        print("📊 [Analytics] Switched to events tab from tab \(previousTab)")
+                    }
                 }) {
                     VStack(spacing: 4) {
-                        Image(systemName: "calendar.badge.plus")
+                        Image(systemName: "trophy")
                             .font(.title2)
                             .foregroundColor(selectedTab == 0 ? Color(red: 18/255, green: 250/255, blue: 210/255) : .gray)
                         Text("События")
-                            .font(.caption)
+                            .font(.custom("HelveticaNeue", size: 14))
                             .foregroundColor(selectedTab == 0 ? Color(red: 18/255, green: 250/255, blue: 210/255) : .gray)
                     }
                 }
-                
-                Spacer()
+                .frame(maxWidth: .infinity)
                 
                 Button(action: {
+                    let previousTab = selectedTab
                     selectedTab = 1
+                    
+                    // Логируем переключение табов
+                    if previousTab != 1 {
+                        Analytics.logEvent("tab_switched", parameters: [
+                            "tab_name": "favorites",
+                            "previous_tab": previousTab == 0 ? "events" : "unknown"
+                        ])
+                        print("📊 [Analytics] Switched to favorites tab from tab \(previousTab)")
+                    }
                 }) {
                     VStack(spacing: 4) {
                         Image(systemName: "heart")
                             .font(.title2)
                             .foregroundColor(selectedTab == 1 ? Color(red: 18/255, green: 250/255, blue: 210/255) : .gray)
                         Text("Избранное")
-                            .font(.caption)
+                            .font(.custom("HelveticaNeue", size: 14))
                             .foregroundColor(selectedTab == 1 ? Color(red: 18/255, green: 250/255, blue: 210/255) : .gray)
                     }
                 }
+                .frame(maxWidth: .infinity)
                 
-                Spacer()
+                Button(action: {
+                    let previousTab = selectedTab
+                    selectedTab = 2
+                    
+                    // Логируем переключение табов
+                    if previousTab != 2 {
+                        Analytics.logEvent("tab_switched", parameters: [
+                            "tab_name": "settings",
+                            "previous_tab": previousTab == 0 ? "events" : (previousTab == 1 ? "favorites" : "unknown")
+                        ])
+                        print("📊 [Analytics] Switched to settings tab from tab \(previousTab)")
+                    }
+                }) {
+                    VStack(spacing: 4) {
+                        Image(systemName: "gearshape")
+                            .font(.title2)
+                            .foregroundColor(selectedTab == 2 ? Color(red: 18/255, green: 250/255, blue: 210/255) : .gray)
+                        Text("Настройки")
+                            .font(.custom("HelveticaNeue", size: 14))
+                            .foregroundColor(selectedTab == 2 ? Color(red: 18/255, green: 250/255, blue: 210/255) : .gray)
+                    }
+                }
+                .frame(maxWidth: .infinity)
             }
             .padding(.vertical, 12)
             .background(Color.black)
@@ -88,6 +138,14 @@ struct ContentView: View {
         .preferredColorScheme(.dark)
         .onAppear {
             setupTabBarAppearance()
+            
+            // Логируем запуск приложения
+            Analytics.logEvent("app_opened", parameters: [
+                "events_cached": eventsManager.cachedEventsCount,
+                "cache_valid": eventsManager.isCacheValid,
+                "has_cached_data": eventsManager.cachedEventsCount > 0
+            ])
+            print("📊 [Analytics] App opened: cache=\(eventsManager.cachedEventsCount) events, valid=\(eventsManager.isCacheValid)")
             
             // ✅ Умная логика первичной загрузки
             handleInitialLoad()
@@ -109,6 +167,18 @@ struct ContentView: View {
                 event.name.localizedCaseInsensitiveContains(searchText) ||
                 event.cityName.localizedCaseInsensitiveContains(searchText) ||
                 event.sportName.localizedCaseInsensitiveContains(searchText)
+            }
+            
+            // Логируем поиск (с дебаунсом для избежания спама)
+            DispatchQueue.main.asyncAfter(deadline: .now() + 0.5) {
+                if !searchText.isEmpty { // Проверяем что поиск еще активен
+                    Analytics.logEvent("search_performed", parameters: [
+                        "query": searchText,
+                        "query_length": searchText.count,
+                        "results_found": result.count
+                    ])
+                    print("📊 [Analytics] Search performed: '\(searchText)' -> \(result.count) results")
+                }
             }
         }
 
@@ -353,6 +423,119 @@ struct FavoritesView: View {
     /// Получает избранные события из загруженных данных
     private var favoriteEvents: [SportEvent] {
         return favoritesManager.getFavoriteEvents(from: eventsManager.events)
+    }
+}
+
+// MARK: - Active Filters View
+struct ActiveFiltersView: View {
+    @Binding var filterCriteria: FilterCriteria
+    
+    var body: some View {
+        ScrollView(.horizontal, showsIndicators: false) {
+            HStack(spacing: 8) {
+                // Выбранные города
+                ForEach(filterCriteria.selectedCities, id: \.self) { city in
+                    FilterChip(text: city, type: .city) {
+                        filterCriteria.selectedCities.removeAll { $0 == city }
+                    }
+                }
+                
+                // Выбранные виды спорта
+                ForEach(Array(filterCriteria.selectedSports), id: \.self) { sport in
+                    FilterChip(text: sport, type: .sport) {
+                        filterCriteria.selectedSports.remove(sport)
+                    }
+                }
+                
+                // Выбранные даты
+                if filterCriteria.startDate != nil || filterCriteria.endDate != nil {
+                    FilterChip(text: dateRangeText, type: .date) {
+                        filterCriteria.startDate = nil
+                        filterCriteria.endDate = nil
+                    }
+                }
+                
+                // Кнопка сброса всех фильтров
+                Button(action: {
+                    filterCriteria.reset()
+                }) {
+                    HStack(spacing: 4) {
+                        Image(systemName: "xmark.circle.fill")
+                            .font(.system(size: 12))
+                        Text("Сбросить все")
+                            .font(.custom("HelveticaNeue", size: 12))
+                    }
+                    .foregroundColor(.white)
+                    .padding(.horizontal, 8)
+                    .padding(.vertical, 4)
+                    .background(Color.red)
+                    .clipShape(RoundedRectangle(cornerRadius: 12))
+                }
+                .buttonStyle(PlainButtonStyle())
+            }
+            .padding(.horizontal, 16)
+        }
+    }
+    
+    private var dateRangeText: String {
+        let formatter = DateFormatter()
+        formatter.dateFormat = "dd MMM"
+        
+        if let startDate = filterCriteria.startDate, let endDate = filterCriteria.endDate {
+            return "\(formatter.string(from: startDate)) - \(formatter.string(from: endDate))"
+        } else if let startDate = filterCriteria.startDate {
+            return "От \(formatter.string(from: startDate))"
+        } else if let endDate = filterCriteria.endDate {
+            return "До \(formatter.string(from: endDate))"
+        }
+        return ""
+    }
+}
+
+// MARK: - Filter Chip
+struct FilterChip: View {
+    let text: String
+    let type: FilterChipType
+    let onRemove: () -> Void
+    
+    enum FilterChipType {
+        case city, sport, date
+        
+        var color: Color {
+            switch self {
+            case .city: return Color(red: 0.2, green: 0.6, blue: 0.9)  // Синий, сочетающийся с бирюзовым
+            case .sport: return Color(red: 0.0, green: 0.8, blue: 0.7)  // Ваш фирменный бирюзовый
+            case .date: return Color(red: 0.9, green: 0.6, blue: 0.2)   // Оранжевый, сочетающийся с бирюзовым
+            }
+        }
+        
+        var icon: String {
+            switch self {
+            case .city: return "location"
+            case .sport: return "figure.run"
+            case .date: return "calendar"
+            }
+        }
+    }
+    
+    var body: some View {
+        Button(action: onRemove) {
+            HStack(spacing: 4) {
+                Image(systemName: type.icon)
+                    .font(.system(size: 10))
+                Text(text)
+                    .font(.custom("HelveticaNeue", size: 12))
+                    .lineLimit(1)
+                Image(systemName: "xmark")
+                    .font(.system(size: 8))
+            }
+            .foregroundColor(.black)
+            .padding(.horizontal, 8)
+            .padding(.vertical, 4)
+            .background(type.color)
+            .clipShape(RoundedRectangle(cornerRadius: 12))
+        }
+        .buttonStyle(PlainButtonStyle())
     }
 }
 

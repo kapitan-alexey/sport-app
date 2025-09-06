@@ -101,8 +101,11 @@ struct EventFilesView: View {
                                     .padding(.vertical, 12)
                                     .background(
                                         RoundedRectangle(cornerRadius: 12)
-                                            .fill(Color.white.opacity(0.1))
-                                            .stroke(Color.white.opacity(0.2), lineWidth: 1)
+                                            .foregroundColor(Color.white.opacity(0.1))
+                                            .overlay(
+                                                RoundedRectangle(cornerRadius: 12)
+                                                    .stroke(Color.white.opacity(0.2), lineWidth: 1)
+                                            )
                                     )
                                 }
                                 .buttonStyle(PlainButtonStyle())
@@ -115,14 +118,12 @@ struct EventFilesView: View {
             }
             .navigationTitle("Файлы")
             .navigationBarTitleDisplayMode(.large)
-            .toolbar {
-                ToolbarItem(placement: .navigationBarTrailing) {
-                    Button("Готово") {
-                        dismiss()
-                    }
-                    .foregroundColor(Color(red: 18/255, green: 250/255, blue: 210/255))
+            .navigationBarItems(
+                trailing: Button("Готово") {
+                    dismiss()
                 }
-            }
+                .foregroundColor(Color(red: 18/255, green: 250/255, blue: 210/255))
+            )
         }
         .sheet(isPresented: $showingSafari) {
             if let url = selectedFileURL {
@@ -258,7 +259,6 @@ struct EventDetailView: View {
                         }) {
                             Image(systemName: "chevron.left")
                                 .font(.title2)
-                                .fontWeight(.semibold)
                                 .foregroundColor(.white)
                                 .frame(width: 44, height: 44)
                                 .background(
@@ -392,8 +392,11 @@ struct EventDetailView: View {
                                 .padding(.vertical, 6)
                                 .background(
                                     RoundedRectangle(cornerRadius: 16)
-                                        .fill(Color(red: 18/255, green: 250/255, blue: 210/255).opacity(0.15))
-                                        .stroke(Color(red: 18/255, green: 250/255, blue: 210/255).opacity(0.4), lineWidth: 1)
+                                        .foregroundColor(Color(red: 18/255, green: 250/255, blue: 210/255).opacity(0.15))
+                                        .overlay(
+                                            RoundedRectangle(cornerRadius: 16)
+                                                .stroke(Color(red: 18/255, green: 250/255, blue: 210/255).opacity(0.4), lineWidth: 1)
+                                        )
                                 )
                         }
                     }
@@ -444,8 +447,11 @@ struct EventDetailView: View {
                     .padding(.vertical, 12)
                     .background(
                         RoundedRectangle(cornerRadius: 12)
-                            .fill(Color.white.opacity(0.1))
-                            .stroke(Color.white.opacity(0.2), lineWidth: 1)
+                            .foregroundColor(Color.white.opacity(0.1))
+                            .overlay(
+                                RoundedRectangle(cornerRadius: 12)
+                                    .stroke(Color.white.opacity(0.2), lineWidth: 1)
+                            )
                     )
                 }
                 .buttonStyle(PlainButtonStyle())

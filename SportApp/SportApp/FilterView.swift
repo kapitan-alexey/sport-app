@@ -1,4 +1,5 @@
 import SwiftUI
+import FirebaseAnalytics
 
 // MARK: - Filter Data Model
 struct FilterCriteria {
@@ -60,9 +61,16 @@ struct FilterView: View {
     @State private var searchText = ""
     @State private var selectedCities: [String] = []
     @State private var startDate = Date()
-    @State private var endDate = Calendar.current.date(byAdding: .month, value: 1, to: Date()) ?? Date()
+    @State private var endDate: Date = {
+        var components = Calendar.current.dateComponents([.year], from: Date())
+        components.month = 12
+        components.day = 31
+        return Calendar.current.date(from: components) ?? Date()
+    }()
     @State private var showingDatePicker = false
     @State private var selectedSports: Set<String> = []
+    @State private var hasUserSelectedDates = false
+    @State private var isCityDropdownOpen = false
     
     // Получаем списки из EventsDataManager
     var availableCities: [String] {
@@ -78,8 +86,16 @@ struct FilterView: View {
         self.eventsManager = eventsManager
         self._selectedCities = State(initialValue: filterCriteria.wrappedValue.selectedCities)
         self._startDate = State(initialValue: filterCriteria.wrappedValue.startDate ?? Date())
-        self._endDate = State(initialValue: filterCriteria.wrappedValue.endDate ?? Calendar.current.date(byAdding: .month, value: 1, to: Date()) ?? Date())
+        
+        let defaultEndDate: Date = {
+            var components = Calendar.current.dateComponents([.year], from: Date())
+            components.month = 12
+            components.day = 31
+            return Calendar.current.date(from: components) ?? Date()
+        }()
+        self._endDate = State(initialValue: filterCriteria.wrappedValue.endDate ?? defaultEndDate)
         self._selectedSports = State(initialValue: filterCriteria.wrappedValue.selectedSports)
+        self._hasUserSelectedDates = State(initialValue: filterCriteria.wrappedValue.startDate != nil || filterCriteria.wrappedValue.endDate != nil)
     }
     
     var filteredCities: [String] {
@@ -94,6 +110,12 @@ struct FilterView: View {
         NavigationView {
             ZStack {
                 Color.black.ignoresSafeArea()
+                    .onTapGesture {
+                        // Закрыть dropdown при клике на фон
+                        if isCityDropdownOpen {
+                            isCityDropdownOpen = false
+                        }
+                    }
                 
                 VStack(spacing: 30) {
                     // City Search Section
@@ -101,8 +123,7 @@ struct FilterView: View {
                         HStack {
                             Text("Города")
                                 .foregroundColor(.white)
-                                .font(.title2)
-                                .fontWeight(.semibold)
+                                .font(.appEventTitle)
                             
                             Spacer()
                             
@@ -116,16 +137,18 @@ struct FilterView: View {
                             }
                         }
                         
-                        // Search Field
-                        HStack {
-                            Image(systemName: "magnifyingglass")
-                                .foregroundColor(.gray)
-                            TextField("Выберите город", text: $searchText)
-                                .foregroundColor(.white)
-                        }
-                        .padding()
-                        .background(Color.gray.opacity(0.2))
-                        .cornerRadius(12)
+                        // Dropdown Field
+                        CityDropdownField(
+                            searchText: $searchText,
+                            isDropdownOpen: $isCityDropdownOpen,
+                            filteredCities: filteredCities.filter { !selectedCities.contains($0) },
+                            onCitySelected: { city in
+                                if !selectedCities.contains(city) {
+                                    selectedCities.append(city)
+                                    searchText = ""
+                                }
+                            }
+                        )
                         
                         // Selected Cities
                         if !selectedCities.isEmpty {
@@ -138,22 +161,6 @@ struct FilterView: View {
                             }
                         }
                         
-                        // Available Cities
-                        if !searchText.isEmpty {
-                            ScrollView {
-                                LazyVGrid(columns: Array(repeating: GridItem(.flexible()), count: 3), spacing: 10) {
-                                    ForEach(filteredCities.filter { !selectedCities.contains($0) }, id: \.self) { city in
-                                        CityTag(city: city, isSelected: false) {
-                                            if !selectedCities.contains(city) {
-                                                selectedCities.append(city)
-                                                searchText = ""
-                                            }
-                                        }
-                                    }
-                                }
-                            }
-                            .frame(maxHeight: 120)
-                        }
                     }
                     
                     // Date Section
@@ -161,13 +168,12 @@ struct FilterView: View {
                         HStack {
                             Text("Даты")
                                 .foregroundColor(.white)
-                                .font(.title2)
-                                .fontWeight(.semibold)
+                                .font(.appEventTitle)
                             
                             Spacer()
                             
-                            // Кнопка сброса дат - показываем если даты изменены от значений по умолчанию
-                            if isDateFilterActive {
+                            // Кнопка сброса дат - показываем если пользователь выбрал даты
+                            if hasUserSelectedDates {
                                 Button("Сбросить") {
                                     resetDateFilter()
                                 }
@@ -177,11 +183,15 @@ struct FilterView: View {
                         }
                         
                         Button(action: {
+                            if !hasUserSelectedDates {
+                                hasUserSelectedDates = true
+                            }
                             showingDatePicker = true
                         }) {
                             HStack {
-                                Text(dateDisplayText)
-                                    .foregroundColor(isDateFilterActive ? .white : .gray)
+                                Text(hasUserSelectedDates ? dateRangeString : "Нажмите для выбора периода")
+                                    .foregroundColor(.gray)
+                                    .font(.appSubheadline)
                                 Spacer()
                                 Image(systemName: "calendar")
                                     .foregroundColor(Color(red: 0.0, green: 0.8, blue: 0.7))
@@ -197,8 +207,7 @@ struct FilterView: View {
                         HStack {
                             Text("Виды спорта")
                                 .foregroundColor(.white)
-                                .font(.title2)
-                                .fontWeight(.semibold)
+                                .font(.appEventTitle)
                             
                             Spacer()
                             
@@ -230,7 +239,7 @@ struct FilterView: View {
                         } else {
                             Text("Нет доступных видов спорта")
                                 .foregroundColor(.gray)
-                                .font(.caption)
+                                .font(.appSubheadline)
                         }
                     }
                     
@@ -262,42 +271,56 @@ struct FilterView: View {
                     DatePickerOverlay(
                         startDate: $startDate,
                         endDate: $endDate,
-                        isShowing: $showingDatePicker
+                        isShowing: $showingDatePicker,
+                        hasUserSelectedDates: $hasUserSelectedDates
                     )
                 }
             }
             .navigationTitle("Фильтр")
             .navigationBarTitleDisplayMode(.inline)
-            .toolbar {
+            .toolbar(content: {
                 ToolbarItem(placement: .navigationBarLeading) {
                     Button("Отменить") {
                         dismiss()
                     }
                     .foregroundColor(Color(red: 0.0, green: 0.8, blue: 0.7))
+                    .font(.custom("HelveticaNeue", size: 17))
                 }
                 
                 ToolbarItem(placement: .navigationBarTrailing) {
                     Button("Применить") {
+                        // Логируем применение фильтров
+                        Analytics.logEvent("filters_applied", parameters: [
+                            "cities_count": selectedCities.count,
+                            "sports_count": selectedSports.count,
+                            "has_date_filter": hasUserSelectedDates,
+                            "cities": selectedCities.joined(separator: ","),
+                            "sports": Array(selectedSports).joined(separator: ",")
+                        ])
+                        
+                        print("📊 [Analytics] Filters applied: cities=\(selectedCities.count), sports=\(selectedSports.count), dates=\(hasUserSelectedDates)")
+                        
                         // Применяем фильтры
                         filterCriteria.selectedCities = selectedCities
                         filterCriteria.selectedSports = selectedSports
                         
-                        // Применяем фильтр дат если он активен
-                        if isDateFilterActive {
-                            filterCriteria.startDate = startDate
-                            filterCriteria.endDate = endDate
+                        // Применяем фильтр дат если пользователь их выбирал
+                        if hasUserSelectedDates {
+                            filterCriteria.startDate = Calendar.current.startOfDay(for: startDate)
+                            filterCriteria.endDate = Calendar.current.date(bySettingHour: 23, minute: 59, second: 59, of: endDate) ?? endDate
+                            print("🗓️ [Filter] Применены даты: \(filterCriteria.startDate!) - \(filterCriteria.endDate!)")
                         } else {
                             filterCriteria.startDate = nil
                             filterCriteria.endDate = nil
+                            print("🗓️ [Filter] Даты сброшены")
                         }
                         
                         dismiss()
                     }
                     .foregroundColor(Color(red: 0.0, green: 0.8, blue: 0.7))
+                    .font(.custom("HelveticaNeue", size: 17))
                 }
-            }
-            .toolbarBackground(Color.black, for: .navigationBar)
-            .toolbarBackground(.visible, for: .navigationBar)
+            })
         }
     }
     
@@ -313,14 +336,17 @@ struct FilterView: View {
         if isDateFilterActive {
             return dateRangeString
         } else {
-            return "Выберите период дат"
+            return "Нажмите для выбора периода"
         }
     }
     
     // Проверяет, активен ли фильтр дат (отличается от значений по умолчанию)
     private var isDateFilterActive: Bool {
         let defaultStartDate = Date()
-        let defaultEndDate = Calendar.current.date(byAdding: .month, value: 1, to: Date()) ?? Date()
+        var components = Calendar.current.dateComponents([.year], from: Date())
+        components.month = 12
+        components.day = 31
+        let defaultEndDate = Calendar.current.date(from: components) ?? Date()
         
         return !Calendar.current.isDate(startDate, inSameDayAs: defaultStartDate) ||
                !Calendar.current.isDate(endDate, inSameDayAs: defaultEndDate)
@@ -329,7 +355,7 @@ struct FilterView: View {
     private var hasActiveFilters: Bool {
         return !selectedCities.isEmpty ||
                !selectedSports.isEmpty ||
-               isDateFilterActive
+               hasUserSelectedDates
     }
     
     private func resetAllFilters() {
@@ -340,7 +366,11 @@ struct FilterView: View {
     
     private func resetDateFilter() {
         startDate = Date()
-        endDate = Calendar.current.date(byAdding: .month, value: 1, to: Date()) ?? Date()
+        var components = Calendar.current.dateComponents([.year], from: Date())
+        components.month = 12
+        components.day = 31
+        endDate = Calendar.current.date(from: components) ?? Date()
+        hasUserSelectedDates = false
     }
 }
 
@@ -383,7 +413,7 @@ struct SportTag: View {
             HStack {
                 Text(sport)
                     .foregroundColor(isSelected ? .black : .gray)
-                    .font(.system(size: 16))
+                    .font(.appSubheadline)
                 
                 Spacer()
                 
@@ -401,10 +431,116 @@ struct SportTag: View {
     }
 }
 
+struct CityDropdownField: View {
+    @Binding var searchText: String
+    @Binding var isDropdownOpen: Bool
+    let filteredCities: [String]
+    let onCitySelected: (String) -> Void
+    
+    @FocusState private var isTextFieldFocused: Bool
+    
+    var body: some View {
+        VStack(spacing: 0) {
+            // Text Field
+            HStack {
+                Image(systemName: "magnifyingglass")
+                    .foregroundColor(.gray)
+                ZStack(alignment: .leading) {
+                    if searchText.isEmpty && !isDropdownOpen {
+                        Text("Выберите город")
+                            .foregroundColor(.gray)
+                            .font(.appSubheadline)
+                    }
+                    TextField(isDropdownOpen ? "Поиск городов..." : "", text: $searchText)
+                        .foregroundColor(isDropdownOpen ? .white : .gray)
+                        .font(.appSubheadline)
+                        .disableAutocorrection(true)
+                        .autocapitalization(.none)
+                        .focused($isTextFieldFocused)
+                        .onChange(of: searchText) { _ in
+                            if !isDropdownOpen {
+                                isDropdownOpen = true
+                            }
+                        }
+                        .allowsHitTesting(isDropdownOpen)
+                }
+                
+                // Dropdown Arrow
+                Image(systemName: isDropdownOpen ? "chevron.up" : "chevron.down")
+                    .foregroundColor(.gray)
+                    .font(.system(size: 12))
+            }
+            .padding()
+            .background(Color.gray.opacity(0.2))
+            .cornerRadius(12)
+            .contentShape(Rectangle())
+            .onTapGesture {
+                if isDropdownOpen {
+                    // Если dropdown открыт, активируем TextField для ввода
+                    isTextFieldFocused = true
+                } else {
+                    // Если dropdown закрыт, открываем его
+                    isDropdownOpen = true
+                    DispatchQueue.main.asyncAfter(deadline: .now() + 0.1) {
+                        isTextFieldFocused = true
+                    }
+                }
+            }
+                
+            // Dropdown List
+            if isDropdownOpen && (!filteredCities.isEmpty || !searchText.isEmpty) {
+                VStack(spacing: 0) {
+                    ScrollView {
+                        LazyVStack(spacing: 0) {
+                            ForEach(filteredCities, id: \.self) { city in
+                                Button(action: {
+                                    onCitySelected(city)
+                                    isDropdownOpen = false
+                                    isTextFieldFocused = false
+                                }) {
+                                    HStack {
+                                        Text(city)
+                                            .foregroundColor(.white)
+                                            .font(.appSubheadline)
+                                            .multilineTextAlignment(.leading)
+                                        Spacer()
+                                    }
+                                    .padding(.horizontal, 16)
+                                    .padding(.vertical, 12)
+                                    .background(Color.clear)
+                                }
+                                .buttonStyle(PlainButtonStyle())
+                                
+                                if city != filteredCities.last {
+                                    Divider()
+                                        .background(Color.gray.opacity(0.3))
+                                }
+                            }
+                        }
+                    }
+                    .frame(maxHeight: 200)
+                }
+                .background(Color.gray.opacity(0.2))
+                .cornerRadius(12)
+                .overlay(
+                    RoundedRectangle(cornerRadius: 12)
+                        .stroke(Color.gray.opacity(0.3), lineWidth: 1)
+                )
+            }
+        }
+        .onChange(of: isTextFieldFocused) { focused in
+            if !focused && searchText.isEmpty {
+                isDropdownOpen = false
+            }
+        }
+    }
+}
+
 struct DatePickerOverlay: View {
     @Binding var startDate: Date
     @Binding var endDate: Date
     @Binding var isShowing: Bool
+    @Binding var hasUserSelectedDates: Bool
     
     var body: some View {
         ZStack {
@@ -414,70 +550,99 @@ struct DatePickerOverlay: View {
                     isShowing = false
                 }
             
-            VStack(spacing: 20) {
+            VStack(spacing: 12) {
                 HStack {
                     Text("Выберите период")
                         .foregroundColor(.white)
-                        .font(.headline)
+                        .font(.appEventTitle)
                     
                     Spacer()
                     
                     // Кнопка сброса дат в оверлее
                     Button("Сбросить") {
-                        let defaultStartDate = Date()
-                        let defaultEndDate = Calendar.current.date(byAdding: .month, value: 1, to: Date()) ?? Date()
-                        startDate = defaultStartDate
-                        endDate = defaultEndDate
+                        startDate = Date()
+                        var components = Calendar.current.dateComponents([.year], from: Date())
+                        components.month = 12
+                        components.day = 31
+                        endDate = Calendar.current.date(from: components) ?? Date()
+                        hasUserSelectedDates = false
                     }
                     .foregroundColor(Color(red: 0.0, green: 0.8, blue: 0.7))
                     .font(.caption)
                 }
                 
-                VStack(spacing: 15) {
-                    VStack(alignment: .leading) {
+                VStack(spacing: 10) {
+                    HStack {
                         Text("От:")
-                            .foregroundColor(.gray)
-                            .font(.caption)
+                            .foregroundColor(.white)
+                            .font(.system(size: 18, weight: .medium))
+                            .frame(width: 50, alignment: .leading)
+                        
+                        Spacer()
+                        
                         DatePicker("", selection: $startDate, displayedComponents: .date)
                             .datePickerStyle(CompactDatePickerStyle())
                             .colorScheme(.dark)
+                            .onChange(of: startDate) { _ in
+                                hasUserSelectedDates = true
+                            }
+                        
+                        Spacer()
                     }
+                    .padding()
+                    .background(Color.gray.opacity(0.2))
+                    .cornerRadius(12)
                     
-                    VStack(alignment: .leading) {
+                    HStack {
                         Text("До:")
-                            .foregroundColor(.gray)
-                            .font(.caption)
+                            .foregroundColor(.white)
+                            .font(.system(size: 18, weight: .medium))
+                            .frame(width: 50, alignment: .leading)
+                        
+                        Spacer()
+                        
                         DatePicker("", selection: $endDate, displayedComponents: .date)
                             .datePickerStyle(CompactDatePickerStyle())
                             .colorScheme(.dark)
+                            .onChange(of: endDate) { _ in
+                                hasUserSelectedDates = true
+                            }
+                        
+                        Spacer()
                     }
+                    .padding()
+                    .background(Color.gray.opacity(0.2))
+                    .cornerRadius(12)
                 }
                 
-                HStack(spacing: 20) {
+                HStack(spacing: 15) {
                     Button("Отмена") {
                         isShowing = false
                     }
-                    .foregroundColor(.red)
+                    .font(.system(size: 18, weight: .medium))
+                    .foregroundColor(.white)
                     .frame(maxWidth: .infinity)
-                    .padding()
-                    .background(Color.gray.opacity(0.2))
-                    .cornerRadius(10)
+                    .padding(.vertical, 16)
+                    .background(Color.red.opacity(0.8))
+                    .cornerRadius(12)
                     
-                    Button("Применить") {
+                    Button("ОК") {
                         isShowing = false
                     }
-                    .foregroundColor(Color(red: 0.0, green: 0.8, blue: 0.7))
+                    .font(.system(size: 18, weight: .bold))
+                    .foregroundColor(.black)
                     .frame(maxWidth: .infinity)
-                    .padding()
-                    .background(Color(red: 0.0, green: 0.8, blue: 0.7).opacity(0.2))
-                    .cornerRadius(10)
+                    .padding(.vertical, 16)
+                    .background(Color(red: 0.0, green: 0.8, blue: 0.7))
+                    .cornerRadius(12)
                 }
             }
-            .padding(20)
+            .padding(15)
             .background(Color.gray.opacity(0.1))
             .background(.ultraThinMaterial)
-            .cornerRadius(20)
-            .padding(.horizontal, 40)
+            .cornerRadius(16)
+            .padding(.horizontal, 20)
+            .padding(.vertical, 50)
         }
     }
 }

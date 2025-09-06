@@ -40,19 +40,24 @@ struct EventsListView: View {
                 DataStatusBanner(eventsManager: eventsManager)
             }
             
-            // Список событий
-            ScrollView {
-                LazyVStack(spacing: 16) {
-                    ForEach(events) { event in
-                        EventCardView(event: event)
-                            .padding(.horizontal, 8)
+            // Список событий или сообщение об отсутствии результатов
+            if events.isEmpty && !eventsManager.events.isEmpty {
+                // Показываем сообщение о том, что фильтр не дал результатов
+                NoFilterResultsView()
+            } else {
+                ScrollView {
+                    LazyVStack(spacing: 16) {
+                        ForEach(events) { event in
+                            EventCardView(event: event)
+                                .padding(.horizontal, 8)
+                        }
                     }
+                    .padding(.top, 0)
+                    .padding(.bottom, 100)
                 }
-                .padding(.top, 0)
-                .padding(.bottom, 100)
-            }
-            .refreshable {
-                eventsManager.refreshEvents()
+                .refreshable {
+                    eventsManager.refreshEvents()
+                }
             }
         }
     }
@@ -86,5 +91,29 @@ struct DataStatusBanner: View {
         .padding(.horizontal, 16)
         .padding(.vertical, 8)
         .background(Color.black.opacity(0.3))
+    }
+}
+
+// MARK: - No Filter Results View
+struct NoFilterResultsView: View {
+    var body: some View {
+        VStack(spacing: 20) {
+            Image(systemName: "magnifyingglass")
+                .font(.system(size: 50))
+                .foregroundColor(.gray.opacity(0.6))
+            
+            VStack(spacing: 8) {
+                Text("Ничего не найдено")
+                    .font(.appEventTitle)
+                    .foregroundColor(.white)
+                
+                Text("Попробуйте изменить параметры фильтра")
+                    .font(.appSubheadline)
+                    .foregroundColor(.gray)
+                    .multilineTextAlignment(.center)
+            }
+        }
+        .padding(40)
+        .frame(maxWidth: .infinity, maxHeight: .infinity)
     }
 }

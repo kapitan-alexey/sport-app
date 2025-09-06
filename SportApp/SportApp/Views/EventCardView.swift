@@ -1,4 +1,5 @@
 import SwiftUI
+import FirebaseAnalytics
 
 // MARK: - Enhanced Event Card View
 struct EventCardView: View {
@@ -7,90 +8,106 @@ struct EventCardView: View {
 
     var body: some View {
         Button(action: {
+            // Логируем клик по карточке события
+            Analytics.logEvent("event_card_clicked", parameters: [
+                "event_id": event.id,
+                "event_name": event.name,
+                "sport_type": event.sportName,
+                "city": event.cityName,
+                "event_date": ISO8601DateFormatter().string(from: event.date),
+                "price": event.price ?? "free"
+            ])
+            
+            print("📊 [Analytics] Event card clicked: \(event.name) (\(event.id))")
+            
             showingDetail = true
         }) {
-            VStack(spacing: 0) {
-                // Изображение с улучшенным кешированием
-                CachedAsyncImage(
-                    url: URL(string: event.fullPhotoMainURL ?? "")
-                ) { image in
-                    image
-                        .resizable()
-                        .aspectRatio(contentMode: .fill)
-                } placeholder: {
-                    ZStack {
-                        LinearGradient(
-                            gradient: Gradient(colors: [
-                                Color.blue.opacity(0.6),
-                                Color.purple.opacity(0.8)
-                            ]),
-                            startPoint: .topLeading,
-                            endPoint: .bottomTrailing
-                        )
-                        
-                        VStack(spacing: 8) {
-                            ProgressView()
-                                .progressViewStyle(CircularProgressViewStyle(tint: .white))
-                                .scaleEffect(0.8)
+            GeometryReader { geometry in
+                VStack(spacing: 0) {
+                    // Изображение с улучшенным кешированием
+                    CachedAsyncImage(
+                        url: URL(string: event.fullPhotoFeedURL ?? "")
+                    ) { image in
+                        image
+                            .resizable()
+                            .aspectRatio(contentMode: .fill)
+                    } placeholder: {
+                        ZStack {
+                            LinearGradient(
+                                gradient: Gradient(colors: [
+                                    Color.blue.opacity(0.6),
+                                    Color.purple.opacity(0.8)
+                                ]),
+                                startPoint: .topLeading,
+                                endPoint: .bottomTrailing
+                            )
                             
-                            Text("Загрузка...")
-                                .font(.caption2)
-                                .foregroundColor(.white.opacity(0.8))
+                            VStack(spacing: 8) {
+                                ProgressView()
+                                    .progressViewStyle(CircularProgressViewStyle(tint: .white))
+                                    .scaleEffect(0.8)
+                                
+                                Text("Загрузка...")
+                                    .font(.caption2)
+                                    .foregroundColor(.white.opacity(0.8))
+                            }
                         }
-                    }
-                } failure: {
-                    ZStack {
-                        LinearGradient(
-                            gradient: Gradient(colors: [
-                                Color.green.opacity(0.4),
-                                Color.blue.opacity(0.6)
-                            ]),
-                            startPoint: .topLeading,
-                            endPoint: .bottomTrailing
-                        )
-                        
-                        VStack(spacing: 8) {
-                            Image(systemName: "photo")
-                                .font(.title2)
-                                .foregroundColor(.white.opacity(0.7))
+                    } failure: {
+                        ZStack {
+                            LinearGradient(
+                                gradient: Gradient(colors: [
+                                    Color.green.opacity(0.4),
+                                    Color.blue.opacity(0.6)
+                                ]),
+                                startPoint: .topLeading,
+                                endPoint: .bottomTrailing
+                            )
                             
-                            Text("Изображение недоступно")
-                                .font(.caption2)
-                                .foregroundColor(.white.opacity(0.8))
-                                .multilineTextAlignment(.center)
-                                .lineLimit(2)
+                            VStack(spacing: 8) {
+                                Image(systemName: "photo")
+                                    .font(.title2)
+                                    .foregroundColor(.white.opacity(0.7))
+                                
+                                Text("Изображение недоступно")
+                                    .font(.caption2)
+                                    .foregroundColor(.white.opacity(0.8))
+                                    .multilineTextAlignment(.center)
+                                    .lineLimit(2)
+                            }
                         }
                     }
-                }
-                .frame(height: 140)
-                .clipped()
+                    .frame(width: geometry.size.width, height: 140)
+                    .clipped()
 
-                // Информация о событии
-                HStack {
-                    VStack(alignment: .leading, spacing: 4) {
-                        Text(event.name)
-                            .font(.appEventTitle)
-                            .foregroundColor(.white)
-                            .multilineTextAlignment(.leading)
+                    // Информация о событии
+                    HStack {
+                        VStack(alignment: .leading, spacing: 4) {
+                            Text(event.name)
+                                .font(.appEventTitle)
+                                .foregroundColor(.white)
+                                .multilineTextAlignment(.leading)
 
-                        HStack(spacing: 6) {
-                            Text(event.cityName)
-                            Text("•")
-                                .font(.appCustom(10))
-                            Text(event.formattedDate)
+                            HStack(spacing: 6) {
+                                Text(event.cityName)
+                                Text("•")
+                                    .font(.appCustom(10))
+                                Text(event.formattedDate)
+                            }
+                            .font(.appSubheadline)
+                            .foregroundColor(.white.opacity(0.7))
                         }
-                        .font(.appSubheadline)
-                        .foregroundColor(.white.opacity(0.7))
+
+                        Spacer()
+
+                        SportIconsView(event: event)
                     }
-
-                    Spacer()
-
-                    SportIconsView(event: event)
+                    .padding(.horizontal, 16)
+                    .padding(.vertical, 12)
+                    .frame(width: geometry.size.width)
+                    .background(Color(red: 0.15, green: 0.15, blue: 0.15))
                 }
-                .padding(.horizontal, 16)
-                .padding(.vertical, 12)
-                .background(Color(red: 0.15, green: 0.15, blue: 0.15))
             }
+            .frame(height: 140 + 60)
             .background(Color.black)
             .cornerRadius(16)
             .shadow(color: .black.opacity(0.3), radius: 8, x: 0, y: 4)

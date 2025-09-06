@@ -9,7 +9,7 @@ class ApiService: ObservableObject {
     static let shared = ApiService()
     
 //    private let baseURL = "http://192.168.0.136:8000"
-    private let baseURL = "http://192.168.0.126:8000"
+    private let baseURL = "https://f90giy807h.execute-api.eu-west-1.amazonaws.com"
     private let session: URLSession
     private let cache = SportsEventsCache.shared
     
@@ -359,5 +359,12 @@ class ImageLoadingService: ObservableObject {
         } catch {
             return nil
         }
+    }
+    
+    /// Очищает кеш изображений
+    func clearImageCache() {
+        cache.removeAllObjects()
+        session.configuration.urlCache?.removeAllCachedResponses()
+        print("🗑️ [ImageService] Кеш изображений очищен")
     }
 }
