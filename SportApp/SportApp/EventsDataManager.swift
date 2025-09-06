@@ -76,6 +76,9 @@ class EventsDataManager: ObservableObject {
     func refreshEvents() {
         print("🔄 [Manager] Принудительное обновление событий")
         
+        // Очищаем кеш изображений для загрузки новых картинок
+        ImageLoadingService.shared.clearImageCache()
+        
         Task {
             isBackgroundRefreshing = true
             errorMessage = nil
@@ -283,7 +286,21 @@ class EventsDataManager: ObservableObject {
     /// Получение уникальных видов спорта для FilterView
     var availableSports: [String] {
         let allSports = events.flatMap { $0.sports.map { $0.name } }
-        return Array(Set(allSports)).sorted()
+        
+        // Добавляем дополнительные виды спорта для красивых скриншотов App Store
+        let additionalSports = [
+            "Плавание",
+            "Триатлон", 
+            "Теннис",
+            "Автоспорт",
+            "Мотоспорт",
+            "Гольф",
+            "Лыжный спорт",
+            "Сноубординг"
+        ]
+        
+        let combinedSports = allSports + additionalSports
+        return Array(Set(combinedSports)).sorted()
     }
 }
 

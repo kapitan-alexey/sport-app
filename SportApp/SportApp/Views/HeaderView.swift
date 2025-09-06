@@ -17,7 +17,7 @@ struct HeaderView: View {
                 }) {
                     Image(systemName: "slider.horizontal.3")
                         .foregroundColor(Color(red: 0.0, green: 0.8, blue: 0.7))
-                        .font(.appTitle3)
+                        .font(.appTitle2)
                 }
 
                 if filterCriteria.hasActiveFilters {
@@ -37,11 +37,13 @@ struct HeaderView: View {
                 TextField("Поиск событий...", text: $searchText)
                     .foregroundColor(.primary)
                     .font(.appCallout)
+                    .disableAutocorrection(true)
+                    .autocapitalization(.none)
             }
             .padding(.horizontal, 16)
             .padding(.vertical, 12)
             .background(
-                RoundedRectangle(cornerRadius: 25)
+                RoundedRectangle(cornerRadius: 16)
                     .fill(Color.white.opacity(0.1))
             )
 

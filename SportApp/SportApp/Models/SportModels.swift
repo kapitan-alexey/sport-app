@@ -36,6 +36,7 @@ struct SportEvent: Codable, Identifiable {
     let name: String
     let date: Date  // ✅ Это поле используется для фильтрации по дате
     let photoMain: String?
+    let photoFeed: String?
     let iconNames: String?
     let fullDescription: String?
     let shortDescription: String?
@@ -71,6 +72,7 @@ struct SportEvent: Codable, Identifiable {
     enum CodingKeys: String, CodingKey {
         case id, name, date, organizer, address, latitude, longitude, price, city, sports, files
         case photoMain = "photo_main"
+        case photoFeed = "photo_feed"
         case iconNames = "icon_names"
         case fullDescription = "full_description"
         case shortDescription = "short_description"
@@ -103,7 +105,7 @@ extension SportEvent {
         let formatter = DateFormatter()
         formatter.locale = Locale(identifier: "ru_RU")
         formatter.dateStyle = .long
-        formatter.timeStyle = .short
+        formatter.timeStyle = .none
         return formatter.string(from: date)
     }
     
@@ -141,6 +143,26 @@ extension SportEvent {
         let fullURL = "\(baseURL)/\(cleanPath)"
         
         print("🔄 Конвертируем URL: '\(photoMain)' -> '\(fullURL)'")
+        return fullURL
+    }
+    
+    var fullPhotoFeedURL: String? {
+        guard let photoFeed = photoFeed, !photoFeed.isEmpty else { return nil }
+        
+        // Если уже полный URL - возвращаем как есть
+        if photoFeed.hasPrefix("http") {
+            print("🔗 Полный URL (feed): \(photoFeed)")
+            return photoFeed
+        }
+        
+        // Если частичный путь - дособираем полный URL
+        let baseURL = "http://192.168.0.136:9000/uploads"
+        
+        // Убираем лишние слэши и форматируем
+        let cleanPath = photoFeed.hasPrefix("/") ? String(photoFeed.dropFirst()) : photoFeed
+        let fullURL = "\(baseURL)/\(cleanPath)"
+        
+        print("🔄 Конвертируем URL (feed): '\(photoFeed)' -> '\(fullURL)'")
         return fullURL
     }
 }

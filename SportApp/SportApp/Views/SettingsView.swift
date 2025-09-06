@@ -83,7 +83,7 @@ struct SettingsView: View {
         }
         .preferredColorScheme(.dark)
         .sheet(isPresented: $showingPrivacyPolicy) {
-            SafariView(url: URL(string: "https://kapitan-alexey.github.io/sport-app/docs/privacy-policy.html")!)
+            PrivacySafariView(url: URL(string: "https://kapitan-alexey.github.io/sport-app/docs/privacy-policy.html")!)
         }
     }
 }
@@ -163,9 +163,9 @@ struct SettingsRowButton: View {
     }
 }
 
-// MARK: - Safari View
+// MARK: - Privacy Safari View
 
-struct SafariView: UIViewControllerRepresentable {
+struct PrivacySafariView: UIViewControllerRepresentable {
     let url: URL
     
     func makeUIViewController(context: Context) -> SFSafariViewController {

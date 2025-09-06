@@ -1,4 +1,5 @@
 import Foundation
+import FirebaseAnalytics
 
 // MARK: - Favorites Manager
 /// Менеджер для управления избранными спортивными событиями
@@ -9,6 +10,9 @@ class FavoritesManager: ObservableObject {
     static let shared = FavoritesManager()
     private init() {
         loadFavorites()
+        // Временно: очистим избранное для отладки
+        // Уберите эту строку после исправления проблемы
+        // clearAllFavorites()
     }
     
     // MARK: - Properties
@@ -22,23 +26,35 @@ class FavoritesManager: ObservableObject {
     /// Добавляет или удаляет событие из избранного
     /// - Parameter eventID: ID спортивного события
     func toggleFavorite(eventID: Int) {
+        let wasAdded = !favoriteEventIDs.contains(eventID)
+        
         if favoriteEventIDs.contains(eventID) {
             favoriteEventIDs.remove(eventID)
         } else {
             favoriteEventIDs.insert(eventID)
         }
         
+        // Логируем изменение избранного
+        Analytics.logEvent(wasAdded ? "favorite_added" : "favorite_removed", parameters: [
+            "event_id": eventID,
+            "total_favorites": favoriteEventIDs.count
+        ])
+        
         saveFavorites()
         
-        print("💙 [Favorites] Событие \(eventID) \(favoriteEventIDs.contains(eventID) ? "добавлено в" : "удалено из") избранного")
-        print("💙 [Favorites] Всего избранных: \(favoriteEventIDs.count)")
+        print("💙 [Favorites] Событие \(eventID) \(wasAdded ? "добавлено в" : "удалено из") избранного")
+        print("📊 [Analytics] Logged: \(wasAdded ? "favorite_added" : "favorite_removed"), total: \(favoriteEventIDs.count)")
     }
     
     /// Проверяет, находится ли событие в избранном
     /// - Parameter eventID: ID спортивного события
     /// - Returns: true если событие в избранном
     func isFavorite(eventID: Int) -> Bool {
-        return favoriteEventIDs.contains(eventID)
+        let result = favoriteEventIDs.contains(eventID)
+        if result {
+            print("💙 [Favorites] Событие \(eventID) НАЙДЕНО в избранном из списка: \(favoriteEventIDs)")
+        }
+        return result
     }
     
     /// Возвращает количество избранных событий
@@ -75,7 +91,7 @@ class FavoritesManager: ObservableObject {
     private func loadFavorites() {
         if let savedFavorites = UserDefaults.standard.array(forKey: favoritesKey) as? [Int] {
             favoriteEventIDs = Set(savedFavorites)
-            print("✅ [Favorites] Загружено \(favoriteEventIDs.count) избранных событий")
+            print("✅ [Favorites] Загружено \(favoriteEventIDs.count) избранных событий: \(favoriteEventIDs)")
         } else {
             favoriteEventIDs = []
             print("📂 [Favorites] Избранные события не найдены - создан пустой список")
