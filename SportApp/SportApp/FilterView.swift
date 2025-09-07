@@ -111,13 +111,16 @@ struct FilterView: View {
             ZStack {
                 Color.black.ignoresSafeArea()
                     .onTapGesture {
-                        // Закрыть dropdown при клике на фон
+                        // Закрыть dropdown и клавиатуру при клике на фон
                         if isCityDropdownOpen {
                             isCityDropdownOpen = false
                         }
+                        // Скрыть клавиатуру
+                        UIApplication.shared.sendAction(#selector(UIResponder.resignFirstResponder), to: nil, from: nil, for: nil)
                     }
                 
-                VStack(spacing: 30) {
+                ScrollView {
+                    VStack(spacing: 30) {
                     // City Search Section
                     VStack(alignment: .leading, spacing: 15) {
                         HStack {
@@ -147,6 +150,8 @@ struct FilterView: View {
                                     selectedCities.append(city)
                                     searchText = ""
                                 }
+                                // Скрыть клавиатуру после выбора города
+                                UIApplication.shared.sendAction(#selector(UIResponder.resignFirstResponder), to: nil, from: nil, for: nil)
                             }
                         )
                         
@@ -183,6 +188,9 @@ struct FilterView: View {
                         }
                         
                         Button(action: {
+                            // Скрыть клавиатуру перед открытием date picker
+                            UIApplication.shared.sendAction(#selector(UIResponder.resignFirstResponder), to: nil, from: nil, for: nil)
+                            
                             if !hasUserSelectedDates {
                                 hasUserSelectedDates = true
                             }
@@ -261,10 +269,16 @@ struct FilterView: View {
                         .padding(.top, 10)
                     }
                     
-                    Spacer()
+                    Spacer(minLength: 100)
+                    }
+                    .padding(.horizontal, 20)
+                    .padding(.top, 10)
                 }
-                .padding(.horizontal, 20)
-                .padding(.top, 10)
+                .scrollDismissesKeyboard(.interactively)
+                .onTapGesture {
+                    // Скрыть клавиатуру при нажатии на любое место в ScrollView
+                    UIApplication.shared.sendAction(#selector(UIResponder.resignFirstResponder), to: nil, from: nil, for: nil)
+                }
                 
                 // Date Picker Overlay
                 if showingDatePicker {
@@ -278,6 +292,7 @@ struct FilterView: View {
             }
             .navigationTitle("Фильтр")
             .navigationBarTitleDisplayMode(.inline)
+            .ignoresSafeArea(.keyboard, edges: .bottom)
             .toolbar(content: {
                 ToolbarItem(placement: .navigationBarLeading) {
                     Button("Отменить") {
@@ -529,7 +544,7 @@ struct CityDropdownField: View {
             }
         }
         .onChange(of: isTextFieldFocused) { focused in
-            if !focused && searchText.isEmpty {
+            if !focused {
                 isDropdownOpen = false
             }
         }
