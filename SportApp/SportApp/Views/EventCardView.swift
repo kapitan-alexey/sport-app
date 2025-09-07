@@ -4,23 +4,30 @@ import FirebaseAnalytics
 // MARK: - Enhanced Event Card View
 struct EventCardView: View {
     let event: SportEvent
+    @Binding var isKeyboardActive: Bool
     @State private var showingDetail = false
 
     var body: some View {
         Button(action: {
-            // Логируем клик по карточке события
-            Analytics.logEvent("event_card_clicked", parameters: [
-                "event_id": event.id,
-                "event_name": event.name,
-                "sport_type": event.sportName,
-                "city": event.cityName,
-                "event_date": ISO8601DateFormatter().string(from: event.date),
-                "price": event.price ?? "free"
-            ])
-            
-            print("📊 [Analytics] Event card clicked: \(event.name) (\(event.id))")
-            
-            showingDetail = true
+            if isKeyboardActive {
+                // Если клавиатура активна, сначала скрываем её
+                UIApplication.shared.sendAction(#selector(UIResponder.resignFirstResponder), to: nil, from: nil, for: nil)
+                isKeyboardActive = false
+            } else {
+                // Логируем клик по карточке события
+                Analytics.logEvent("event_card_clicked", parameters: [
+                    "event_id": event.id,
+                    "event_name": event.name,
+                    "sport_type": event.sportName,
+                    "city": event.cityName,
+                    "event_date": ISO8601DateFormatter().string(from: event.date),
+                    "price": event.price ?? "free"
+                ])
+                
+                print("📊 [Analytics] Event card clicked: \(event.name) (\(event.id))")
+                
+                showingDetail = true
+            }
         }) {
             GeometryReader { geometry in
                 VStack(spacing: 0) {

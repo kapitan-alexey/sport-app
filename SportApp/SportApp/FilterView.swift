@@ -109,7 +109,7 @@ struct FilterView: View {
     var body: some View {
         NavigationView {
             ZStack {
-                Color.black.ignoresSafeArea()
+                Color.black.ignoresSafeArea(.all)
                     .onTapGesture {
                         // Закрыть dropdown и клавиатуру при клике на фон
                         if isCityDropdownOpen {
@@ -560,7 +560,7 @@ struct DatePickerOverlay: View {
     var body: some View {
         ZStack {
             Color.black.opacity(0.7)
-                .ignoresSafeArea()
+                .ignoresSafeArea(.all)
                 .onTapGesture {
                     isShowing = false
                 }

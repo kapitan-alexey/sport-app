@@ -2,19 +2,21 @@ import SwiftUI
 import SafariServices
 
 struct SettingsView: View {
+    @Environment(\.dismiss) private var dismiss
     @State private var showingPrivacyPolicy = false
+    @State private var cacheStatus = CacheStatus(hasCache: false, isValid: false, lastUpdate: nil, size: "0 Б", eventCount: 0)
     
     var body: some View {
         NavigationView {
             ZStack {
-                Color.black.ignoresSafeArea()
+                Color.black.ignoresSafeArea(.all)
                 
                 ScrollView {
                     VStack(spacing: 20) {
                         // App Info Section
                         VStack(alignment: .leading, spacing: 12) {
                             Text("О приложении")
-                                .font(.headline)
+                                .font(.custom("HelveticaNeue-CondensedBold", size: 20))
                                 .foregroundColor(.white)
                             
                             VStack(spacing: 8) {
@@ -38,7 +40,7 @@ struct SettingsView: View {
                         // Privacy Section
                         VStack(alignment: .leading, spacing: 12) {
                             Text("Конфиденциальность")
-                                .font(.headline)
+                                .font(.custom("HelveticaNeue-CondensedBold", size: 20))
                                 .foregroundColor(.white)
                             
                             VStack(spacing: 8) {
@@ -61,6 +63,40 @@ struct SettingsView: View {
                             }
                         }
                         
+                        Divider()
+                            .background(Color.gray.opacity(0.3))
+                        
+                        // Cache Section
+                        VStack(alignment: .leading, spacing: 12) {
+                            Text("Кеш")
+                                .font(.custom("HelveticaNeue-CondensedBold", size: 20))
+                                .foregroundColor(.white)
+                            
+                            VStack(spacing: 8) {
+                                Button(action: {
+                                    updateCacheStatus()
+                                }) {
+                                    SettingsRow(
+                                        icon: "externaldrive",
+                                        title: "Размер кеша",
+                                        value: cacheStatus.size
+                                    )
+                                }
+                                .buttonStyle(PlainButtonStyle())
+                                
+                                Button(action: {
+                                    SportsEventsCache.shared.clearCache()
+                                    updateCacheStatus()
+                                }) {
+                                    SettingsRowButton(
+                                        icon: "trash",
+                                        title: "Очистить кеш"
+                                    )
+                                }
+                                .buttonStyle(PlainButtonStyle())
+                            }
+                        }
+                        
                         Spacer(minLength: 50)
                         
                         // Footer
@@ -79,12 +115,30 @@ struct SettingsView: View {
                 }
             }
             .navigationTitle("Настройки")
-            .navigationBarTitleDisplayMode(.large)
+            .navigationBarTitleDisplayMode(.inline)
+            .toolbar {
+                ToolbarItem(placement: .navigationBarTrailing) {
+                    Button("Готово") {
+                        dismiss()
+                    }
+                    .foregroundColor(Color(red: 0.0, green: 0.8, blue: 0.7))
+                    .font(.custom("HelveticaNeue", size: 17))
+                }
+            }
         }
         .preferredColorScheme(.dark)
+        .onAppear {
+            updateCacheStatus()
+        }
         .sheet(isPresented: $showingPrivacyPolicy) {
             PrivacySafariView(url: URL(string: "https://kapitan-alexey.github.io/sport-app/docs/privacy-policy.html")!)
         }
+    }
+    
+    // MARK: - Private Methods
+    private func updateCacheStatus() {
+        cacheStatus = SportsEventsCache.shared.getCacheStatus()
+        print("🔍 [Settings] Cache status updated: \(cacheStatus.eventCount) events, \(cacheStatus.size)")
     }
 }
 
@@ -112,7 +166,7 @@ struct SettingsRow: View {
             
             VStack(alignment: .leading, spacing: 2) {
                 Text(title)
-                    .font(.custom("HelveticaNeue", size: 16))
+                    .font(.custom("HelveticaNeue", size: 14))
                     .foregroundColor(.white)
                 
                 if let subtitle = subtitle {
@@ -125,7 +179,7 @@ struct SettingsRow: View {
             Spacer()
             
             Text(value)
-                .font(.custom("HelveticaNeue", size: 14))
+                .font(.custom("HelveticaNeue", size: 13))
                 .foregroundColor(.gray)
         }
         .padding(.vertical, 8)
@@ -147,7 +201,7 @@ struct SettingsRowButton: View {
                 .frame(width: 24)
             
             Text(title)
-                .font(.custom("HelveticaNeue", size: 16))
+                .font(.custom("HelveticaNeue", size: 14))
                 .foregroundColor(.white)
             
             Spacer()

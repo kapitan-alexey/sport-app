@@ -4,6 +4,7 @@ import SwiftUI
 struct MainContentView: View {
     @ObservedObject var eventsManager: EventsDataManager
     let filteredEvents: [SportEvent]
+    @Binding var isKeyboardActive: Bool
     
     var body: some View {
         Group {
@@ -21,7 +22,8 @@ struct MainContentView: View {
             } else {
                 EventsListView(
                     events: filteredEvents,
-                    eventsManager: eventsManager
+                    eventsManager: eventsManager,
+                    isKeyboardActive: $isKeyboardActive
                 )
             }
         }
@@ -32,65 +34,74 @@ struct MainContentView: View {
 struct EventsListView: View {
     let events: [SportEvent]
     @ObservedObject var eventsManager: EventsDataManager
+    @Binding var isKeyboardActive: Bool
     
     var body: some View {
         VStack(spacing: 0) {
-            // Индикатор состояния данных
-            if eventsManager.isDataFromCache || eventsManager.isBackgroundRefreshing {
-                DataStatusBanner(eventsManager: eventsManager)
-            }
             
             // Список событий или сообщение об отсутствии результатов
             if events.isEmpty && !eventsManager.events.isEmpty {
                 // Показываем сообщение о том, что фильтр не дал результатов
                 NoFilterResultsView()
-            } else {
-                ScrollView {
-                    LazyVStack(spacing: 16) {
-                        ForEach(events) { event in
-                            EventCardView(event: event)
-                                .padding(.horizontal, 8)
-                        }
+                    .onTapGesture {
+                        // Скрыть клавиатуру при нажатии на экран "ничего не найдено"
+                        UIApplication.shared.sendAction(#selector(UIResponder.resignFirstResponder), to: nil, from: nil, for: nil)
                     }
-                    .padding(.top, 0)
-                    .padding(.bottom, 100)
-                }
-                .refreshable {
-                    eventsManager.refreshEvents()
+            } else {
+                ZStack {
+                    ScrollViewReader { proxy in
+                        ScrollView {
+                            LazyVStack(spacing: 16) {
+                                ForEach(events) { event in
+                                    EventCardView(event: event, isKeyboardActive: $isKeyboardActive)
+                                        .padding(.horizontal, 8)
+                                }
+                            }
+                            .padding(.top, 0)
+                            .padding(.bottom, 100)
+                            .background(
+                                Color.clear
+                                    .contentShape(Rectangle())
+                                    .onTapGesture {
+                                        // Скрыть клавиатуру при нажатии на фон между карточками
+                                        UIApplication.shared.sendAction(#selector(UIResponder.resignFirstResponder), to: nil, from: nil, for: nil)
+                                    }
+                            )
+                        }
+                        .scrollDismissesKeyboard(.immediately)
+                        .simultaneousGesture(
+                            DragGesture().onChanged { _ in
+                                // Скрыть клавиатуру при начале прокрутки
+                                UIApplication.shared.sendAction(#selector(UIResponder.resignFirstResponder), to: nil, from: nil, for: nil)
+                            }
+                        )
+                    }
+                    .refreshable {
+                        eventsManager.refreshEvents()
+                    }
+                    
+                    // Индикатор загрузки с текстом для pull-to-refresh
+                    if eventsManager.isLoading && !eventsManager.events.isEmpty {
+                        VStack(spacing: 12) {
+                            ProgressView()
+                                .progressViewStyle(CircularProgressViewStyle(tint: Color(red: 0.0, green: 0.8, blue: 0.7)))
+                                .scaleEffect(1.2)
+                            
+                            Text("Загрузка событий")
+                                .font(.callout)
+                                .foregroundColor(.white)
+                                .fontWeight(.medium)
+                        }
+                        .padding(.vertical, 20)
+                        .padding(.horizontal, 24)
+                        .background(
+                            RoundedRectangle(cornerRadius: 12)
+                                .fill(Color.black.opacity(0.8))
+                        )
+                    }
                 }
             }
         }
-    }
-}
-
-// MARK: - Data Status Banner
-struct DataStatusBanner: View {
-    @ObservedObject var eventsManager: EventsDataManager
-    
-    var body: some View {
-        HStack {
-            if eventsManager.isBackgroundRefreshing {
-                ProgressView()
-                    .progressViewStyle(CircularProgressViewStyle(tint: Color(red: 0.0, green: 0.8, blue: 0.7)))
-                    .scaleEffect(0.8)
-                
-                Text("Обновление данных...")
-                    .font(.caption)
-                    .foregroundColor(.white.opacity(0.8))
-            } else if eventsManager.isDataFromCache {
-                Image(systemName: eventsManager.isCacheValid ? "checkmark.circle" : "clock.circle")
-                    .foregroundColor(eventsManager.isCacheValid ? .green : .orange)
-                
-                Text(eventsManager.dataSourceDescription)
-                    .font(.caption)
-                    .foregroundColor(.white.opacity(0.8))
-            }
-            
-            Spacer()
-        }
-        .padding(.horizontal, 16)
-        .padding(.vertical, 8)
-        .background(Color.black.opacity(0.3))
     }
 }
 

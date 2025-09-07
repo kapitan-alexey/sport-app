@@ -8,7 +8,9 @@ struct ContentView: View {
     @State private var searchText = ""
     @State private var filterCriteria = FilterCriteria()
     @State private var showingCacheSettings = false
+    @State private var showingSettings = false
     @State private var showingSplash = true
+    @State private var isKeyboardActive = false
 
     var body: some View {
         ZStack {
@@ -45,6 +47,10 @@ struct ContentView: View {
                 NavigationView {
                     ZStack {
                         Color.black.ignoresSafeArea(.all)
+                            .onTapGesture {
+                                // Скрыть клавиатуру при нажатии на фон
+                                UIApplication.shared.sendAction(#selector(UIResponder.resignFirstResponder), to: nil, from: nil, for: nil)
+                            }
 
                         VStack(spacing: 0) {
                             // Заголовок с индикаторами кеша
@@ -52,7 +58,9 @@ struct ContentView: View {
                                 searchText: $searchText,
                                 filterCriteria: $filterCriteria,
                                 eventsManager: eventsManager,
-                                showingCacheSettings: $showingCacheSettings
+                                showingCacheSettings: $showingCacheSettings,
+                                showingSettings: $showingSettings,
+                                isKeyboardActive: $isKeyboardActive
                             )
                             .padding(.horizontal, 16)
                             .padding(.top, 8)
@@ -69,90 +77,69 @@ struct ContentView: View {
                             // Основной контент с умной логикой загрузки
                             MainContentView(
                                 eventsManager: eventsManager,
-                                filteredEvents: filteredEvents
+                                filteredEvents: filteredEvents,
+                                isKeyboardActive: $isKeyboardActive
                             )
                         }
                     }
                 }
             } else if selectedTab == 1 {
                 FavoritesView()
-            } else {
-                SettingsView()
             }
             
             // Кастомный TabBar
-            HStack(spacing: 0) {
-                Button(action: {
-                    let previousTab = selectedTab
-                    selectedTab = 0
-                    
-                    // Логируем переключение табов
-                    if previousTab != 0 {
-                        Analytics.logEvent("tab_switched", parameters: [
-                            "tab_name": "events",
-                            "previous_tab": previousTab == 1 ? "favorites" : "unknown"
-                        ])
-                        print("📊 [Analytics] Switched to events tab from tab \(previousTab)")
-                    }
-                }) {
-                    VStack(spacing: 4) {
-                        Image(systemName: "trophy")
-                            .font(.title2)
-                            .foregroundColor(selectedTab == 0 ? Color(red: 18/255, green: 250/255, blue: 210/255) : .gray)
-                        Text("События")
-                            .font(.custom("HelveticaNeue", size: 14))
-                            .foregroundColor(selectedTab == 0 ? Color(red: 18/255, green: 250/255, blue: 210/255) : .gray)
-                    }
-                }
-                .frame(maxWidth: .infinity)
+            HStack {
+                Spacer()
                 
-                Button(action: {
-                    let previousTab = selectedTab
-                    selectedTab = 1
-                    
-                    // Логируем переключение табов
-                    if previousTab != 1 {
-                        Analytics.logEvent("tab_switched", parameters: [
-                            "tab_name": "favorites",
-                            "previous_tab": previousTab == 0 ? "events" : "unknown"
-                        ])
-                        print("📊 [Analytics] Switched to favorites tab from tab \(previousTab)")
+                HStack(spacing: 60) {
+                    Button(action: {
+                        let previousTab = selectedTab
+                        selectedTab = 0
+                        
+                        // Логируем переключение табов
+                        if previousTab != 0 {
+                            Analytics.logEvent("tab_switched", parameters: [
+                                "tab_name": "events",
+                                "previous_tab": previousTab == 1 ? "favorites" : "unknown"
+                            ])
+                            print("📊 [Analytics] Switched to events tab from tab \(previousTab)")
+                        }
+                    }) {
+                        VStack(spacing: 4) {
+                            Image(systemName: "trophy")
+                                .font(.title2)
+                                .foregroundColor(selectedTab == 0 ? Color(red: 18/255, green: 250/255, blue: 210/255) : .gray)
+                            Text("События")
+                                .font(.custom("HelveticaNeue", size: 14))
+                                .foregroundColor(selectedTab == 0 ? Color(red: 18/255, green: 250/255, blue: 210/255) : .gray)
+                        }
                     }
-                }) {
-                    VStack(spacing: 4) {
-                        Image(systemName: "heart")
-                            .font(.title2)
-                            .foregroundColor(selectedTab == 1 ? Color(red: 18/255, green: 250/255, blue: 210/255) : .gray)
-                        Text("Избранное")
-                            .font(.custom("HelveticaNeue", size: 14))
-                            .foregroundColor(selectedTab == 1 ? Color(red: 18/255, green: 250/255, blue: 210/255) : .gray)
+                    
+                    Button(action: {
+                        let previousTab = selectedTab
+                        selectedTab = 1
+                        
+                        // Логируем переключение табов
+                        if previousTab != 1 {
+                            Analytics.logEvent("tab_switched", parameters: [
+                                "tab_name": "favorites",
+                                "previous_tab": previousTab == 0 ? "events" : "unknown"
+                            ])
+                            print("📊 [Analytics] Switched to favorites tab from tab \(previousTab)")
+                        }
+                    }) {
+                        VStack(spacing: 4) {
+                            Image(systemName: "heart")
+                                .font(.title2)
+                                .foregroundColor(selectedTab == 1 ? Color(red: 18/255, green: 250/255, blue: 210/255) : .gray)
+                            Text("Избранное")
+                                .font(.custom("HelveticaNeue", size: 14))
+                                .foregroundColor(selectedTab == 1 ? Color(red: 18/255, green: 250/255, blue: 210/255) : .gray)
+                        }
                     }
                 }
-                .frame(maxWidth: .infinity)
                 
-                Button(action: {
-                    let previousTab = selectedTab
-                    selectedTab = 2
-                    
-                    // Логируем переключение табов
-                    if previousTab != 2 {
-                        Analytics.logEvent("tab_switched", parameters: [
-                            "tab_name": "settings",
-                            "previous_tab": previousTab == 0 ? "events" : (previousTab == 1 ? "favorites" : "unknown")
-                        ])
-                        print("📊 [Analytics] Switched to settings tab from tab \(previousTab)")
-                    }
-                }) {
-                    VStack(spacing: 4) {
-                        Image(systemName: "gearshape")
-                            .font(.title2)
-                            .foregroundColor(selectedTab == 2 ? Color(red: 18/255, green: 250/255, blue: 210/255) : .gray)
-                        Text("Настройки")
-                            .font(.custom("HelveticaNeue", size: 14))
-                            .foregroundColor(selectedTab == 2 ? Color(red: 18/255, green: 250/255, blue: 210/255) : .gray)
-                    }
-                }
-                .frame(maxWidth: .infinity)
+                Spacer()
             }
             .padding(.vertical, 12)
             .background(Color.black)
@@ -168,8 +155,11 @@ struct ContentView: View {
             .onAppear {
                 setupTabBarAppearance()
             }
-            .sheet(isPresented: $showingCacheSettings) {
+            .fullScreenCover(isPresented: $showingCacheSettings) {
                 CacheSettingsView(eventsManager: eventsManager)
+            }
+            .fullScreenCover(isPresented: $showingSettings) {
+                SettingsView()
             }
     }
 
@@ -242,7 +232,10 @@ struct CacheSettingsView: View {
     
     var body: some View {
         NavigationView {
-            VStack(spacing: 20) {
+            ZStack {
+                Color.black.ignoresSafeArea(.all)
+                
+                VStack(spacing: 20) {
                 // Статистика кеша
                 VStack(alignment: .leading, spacing: 12) {
                     Text("Состояние кеша")
@@ -307,9 +300,9 @@ struct CacheSettingsView: View {
                 }
                 
                 Spacer()
+                }
+                .padding()
             }
-            .padding()
-            .background(Color.black)
             .navigationTitle("Настройки кеша")
             .navigationBarTitleDisplayMode(.inline)
             .toolbar {
@@ -383,6 +376,7 @@ struct CalendarView: View {
 struct FavoritesView: View {
     @StateObject private var eventsManager = EventsDataManager()
     @ObservedObject private var favoritesManager = FavoritesManager.shared
+    @State private var isKeyboardActive = false
     
     var body: some View {
         NavigationView {
@@ -412,7 +406,7 @@ struct FavoritesView: View {
                         LazyVStack(spacing: 12) {
                             ForEach(favoriteEvents) { event in
                                 NavigationLink(destination: EventDetailView(event: event)) {
-                                    EventCardView(event: event)
+                                    EventCardView(event: event, isKeyboardActive: $isKeyboardActive)
                                 }
                                 .buttonStyle(PlainButtonStyle())
                             }
