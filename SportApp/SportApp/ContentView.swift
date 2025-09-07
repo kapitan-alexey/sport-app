@@ -8,8 +8,37 @@ struct ContentView: View {
     @State private var searchText = ""
     @State private var filterCriteria = FilterCriteria()
     @State private var showingCacheSettings = false
+    @State private var showingSplash = true
 
     var body: some View {
+        ZStack {
+            if showingSplash {
+                SplashScreenView {
+                    withAnimation(.easeInOut(duration: 0.5)) {
+                        showingSplash = false
+                    }
+                }
+                .onAppear {
+                    // Логируем запуск приложения
+                    Analytics.logEvent("app_opened", parameters: [
+                        "events_cached": eventsManager.cachedEventsCount,
+                        "cache_valid": eventsManager.isCacheValid,
+                        "has_cached_data": eventsManager.cachedEventsCount > 0
+                    ])
+                    print("📊 [Analytics] App opened: cache=\(eventsManager.cachedEventsCount) events, valid=\(eventsManager.isCacheValid)")
+                    
+                    // Загружаем данные во время показа splash screen
+                    handleInitialLoad()
+                }
+            } else {
+                mainContentView
+            }
+        }
+    }
+    
+    // MARK: - Main Content View
+    @ViewBuilder
+    private var mainContentView: some View {
         VStack(spacing: 0) {
             // Основной контент
             if selectedTab == 0 {
@@ -133,26 +162,15 @@ struct ContentView: View {
                     .foregroundColor(Color.gray.opacity(0.3)),
                 alignment: .top
             )
-        }
-        .accentColor(Color(red: 0.0, green: 0.8, blue: 0.7))
-        .preferredColorScheme(.dark)
-        .onAppear {
-            setupTabBarAppearance()
-            
-            // Логируем запуск приложения
-            Analytics.logEvent("app_opened", parameters: [
-                "events_cached": eventsManager.cachedEventsCount,
-                "cache_valid": eventsManager.isCacheValid,
-                "has_cached_data": eventsManager.cachedEventsCount > 0
-            ])
-            print("📊 [Analytics] App opened: cache=\(eventsManager.cachedEventsCount) events, valid=\(eventsManager.isCacheValid)")
-            
-            // ✅ Умная логика первичной загрузки
-            handleInitialLoad()
-        }
-        .sheet(isPresented: $showingCacheSettings) {
-            CacheSettingsView(eventsManager: eventsManager)
-        }
+            }
+            .accentColor(Color(red: 0.0, green: 0.8, blue: 0.7))
+            .preferredColorScheme(.dark)
+            .onAppear {
+                setupTabBarAppearance()
+            }
+            .sheet(isPresented: $showingCacheSettings) {
+                CacheSettingsView(eventsManager: eventsManager)
+            }
     }
 
     // MARK: - Computed Properties
