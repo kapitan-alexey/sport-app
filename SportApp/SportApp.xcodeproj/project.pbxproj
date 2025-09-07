@@ -7,7 +7,6 @@
 	objects = {
 
 /* Begin PBXBuildFile section */
-		ADE6C8BD2E64B090009CE927 /* GoogleService-Info.plist in Resources */ = {isa = PBXBuildFile; fileRef = ADE6C8BC2E64B090009CE927 /* GoogleService-Info.plist */; };
 		ADE6C8C12E64B4B6009CE927 /* FirebaseAnalytics in Frameworks */ = {isa = PBXBuildFile; productRef = ADE6C8C02E64B4B6009CE927 /* FirebaseAnalytics */; };
 		ADE6C8C32E64B4DC009CE927 /* FirebaseCore in Frameworks */ = {isa = PBXBuildFile; productRef = ADE6C8C22E64B4DC009CE927 /* FirebaseCore */; };
 /* End PBXBuildFile section */
@@ -33,7 +32,6 @@
 		ADE13D4C2DF5C18D004A64B2 /* SportApp.app */ = {isa = PBXFileReference; explicitFileType = wrapper.application; includeInIndex = 0; path = SportApp.app; sourceTree = BUILT_PRODUCTS_DIR; };
 		ADE13D5E2DF5C18F004A64B2 /* SportAppTests.xctest */ = {isa = PBXFileReference; explicitFileType = wrapper.cfbundle; includeInIndex = 0; path = SportAppTests.xctest; sourceTree = BUILT_PRODUCTS_DIR; };
 		ADE13D682DF5C18F004A64B2 /* SportAppUITests.xctest */ = {isa = PBXFileReference; explicitFileType = wrapper.cfbundle; includeInIndex = 0; path = SportAppUITests.xctest; sourceTree = BUILT_PRODUCTS_DIR; };
-		ADE6C8BC2E64B090009CE927 /* GoogleService-Info.plist */ = {isa = PBXFileReference; lastKnownFileType = text.plist.xml; path = "GoogleService-Info.plist"; sourceTree = "<group>"; };
 /* End PBXFileReference section */
 
 /* Begin PBXFileSystemSynchronizedRootGroup section */
@@ -88,7 +86,6 @@
 				ADE13D612DF5C18F004A64B2 /* SportAppTests */,
 				ADE13D6B2DF5C18F004A64B2 /* SportAppUITests */,
 				ADE13D4D2DF5C18D004A64B2 /* Products */,
-				ADE6C8BC2E64B090009CE927 /* GoogleService-Info.plist */,
 				ADE6C8BF2E64B4B5009CE927 /* Frameworks */,
 			);
 			sourceTree = "<group>";
@@ -235,7 +232,6 @@
 			isa = PBXResourcesBuildPhase;
 			buildActionMask = 2147483647;
 			files = (
-				ADE6C8BD2E64B090009CE927 /* GoogleService-Info.plist in Resources */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};
