@@ -54,12 +54,6 @@ struct SettingsView: View {
                                 }
                                 .buttonStyle(PlainButtonStyle())
                                 
-                                SettingsRow(
-                                    icon: "chart.bar",
-                                    title: "Аналитика",
-                                    value: "Включена",
-                                    subtitle: "Помогает улучшать приложение"
-                                )
                             }
                         }
                         
@@ -131,7 +125,7 @@ struct SettingsView: View {
             updateCacheStatus()
         }
         .sheet(isPresented: $showingPrivacyPolicy) {
-            PrivacySafariView(url: URL(string: "https://kapitan-alexey.github.io/sport-app/docs/privacy-policy.html")!)
+            PrivacySafariView(url: URL(string: "https://dynamo-app.com/privacy-policy.html")!)
         }
     }
     

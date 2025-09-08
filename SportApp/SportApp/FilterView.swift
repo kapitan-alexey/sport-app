@@ -62,10 +62,7 @@ struct FilterView: View {
     @State private var selectedCities: [String] = []
     @State private var startDate = Date()
     @State private var endDate: Date = {
-        var components = Calendar.current.dateComponents([.year], from: Date())
-        components.month = 12
-        components.day = 31
-        return Calendar.current.date(from: components) ?? Date()
+        return Calendar.current.date(byAdding: .month, value: 6, to: Date()) ?? Date()
     }()
     @State private var showingDatePicker = false
     @State private var selectedSports: Set<String> = []
@@ -88,10 +85,7 @@ struct FilterView: View {
         self._startDate = State(initialValue: filterCriteria.wrappedValue.startDate ?? Date())
         
         let defaultEndDate: Date = {
-            var components = Calendar.current.dateComponents([.year], from: Date())
-            components.month = 12
-            components.day = 31
-            return Calendar.current.date(from: components) ?? Date()
+            return Calendar.current.date(byAdding: .month, value: 6, to: Date()) ?? Date()
         }()
         self._endDate = State(initialValue: filterCriteria.wrappedValue.endDate ?? defaultEndDate)
         self._selectedSports = State(initialValue: filterCriteria.wrappedValue.selectedSports)
@@ -358,10 +352,7 @@ struct FilterView: View {
     // Проверяет, активен ли фильтр дат (отличается от значений по умолчанию)
     private var isDateFilterActive: Bool {
         let defaultStartDate = Date()
-        var components = Calendar.current.dateComponents([.year], from: Date())
-        components.month = 12
-        components.day = 31
-        let defaultEndDate = Calendar.current.date(from: components) ?? Date()
+        let defaultEndDate = Calendar.current.date(byAdding: .month, value: 6, to: Date()) ?? Date()
         
         return !Calendar.current.isDate(startDate, inSameDayAs: defaultStartDate) ||
                !Calendar.current.isDate(endDate, inSameDayAs: defaultEndDate)
@@ -381,10 +372,7 @@ struct FilterView: View {
     
     private func resetDateFilter() {
         startDate = Date()
-        var components = Calendar.current.dateComponents([.year], from: Date())
-        components.month = 12
-        components.day = 31
-        endDate = Calendar.current.date(from: components) ?? Date()
+        endDate = Calendar.current.date(byAdding: .month, value: 6, to: startDate) ?? Date()
         hasUserSelectedDates = false
     }
 }
@@ -570,16 +558,15 @@ struct DatePickerOverlay: View {
                     Text("Выберите период")
                         .foregroundColor(.white)
                         .font(.appEventTitle)
+                        .scaleEffect(1.2)
+                        .padding(.leading, 16)
                     
                     Spacer()
                     
                     // Кнопка сброса дат в оверлее
                     Button("Сбросить") {
                         startDate = Date()
-                        var components = Calendar.current.dateComponents([.year], from: Date())
-                        components.month = 12
-                        components.day = 31
-                        endDate = Calendar.current.date(from: components) ?? Date()
+                        endDate = Calendar.current.date(byAdding: .month, value: 6, to: startDate) ?? Date()
                         hasUserSelectedDates = false
                     }
                     .foregroundColor(Color(red: 0.0, green: 0.8, blue: 0.7))
@@ -630,33 +617,26 @@ struct DatePickerOverlay: View {
                     .cornerRadius(12)
                 }
                 
-                HStack(spacing: 15) {
-                    Button("Отмена") {
+                HStack {
+                    Button(action: {
                         isShowing = false
+                    }) {
+                        Text("ОК")
+                            .font(.system(size: 18, weight: .bold))
+                            .foregroundColor(.black)
+                            .frame(maxWidth: .infinity)
+                            .padding(.vertical, 16)
+                            .background(Color(red: 0.0, green: 0.8, blue: 0.7))
+                            .cornerRadius(12)
                     }
-                    .font(.system(size: 18, weight: .medium))
-                    .foregroundColor(.white)
-                    .frame(maxWidth: .infinity)
-                    .padding(.vertical, 16)
-                    .background(Color.red.opacity(0.8))
-                    .cornerRadius(12)
-                    
-                    Button("ОК") {
-                        isShowing = false
-                    }
-                    .font(.system(size: 18, weight: .bold))
-                    .foregroundColor(.black)
-                    .frame(maxWidth: .infinity)
-                    .padding(.vertical, 16)
-                    .background(Color(red: 0.0, green: 0.8, blue: 0.7))
-                    .cornerRadius(12)
+                    .buttonStyle(PlainButtonStyle())
                 }
             }
             .padding(15)
             .background(Color.gray.opacity(0.1))
             .background(.ultraThinMaterial)
             .cornerRadius(16)
-            .padding(.horizontal, 20)
+            .padding(.horizontal, 40)
             .padding(.vertical, 50)
         }
     }

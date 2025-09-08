@@ -67,6 +67,12 @@
       "size" : "60x60"
     },
     {
+      "filename" : "152.png",
+      "idiom" : "ipad",
+      "scale" : "2x",
+      "size" : "76x76"
+    },
+    {
       "filename" : "1024.png",
       "idiom" : "ios-marketing",
       "scale" : "1x",

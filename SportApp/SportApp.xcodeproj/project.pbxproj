@@ -29,7 +29,7 @@
 /* End PBXContainerItemProxy section */
 
 /* Begin PBXFileReference section */
-		ADE13D4C2DF5C18D004A64B2 /* SportApp.app */ = {isa = PBXFileReference; explicitFileType = wrapper.application; includeInIndex = 0; path = SportApp.app; sourceTree = BUILT_PRODUCTS_DIR; };
+		ADE13D4C2DF5C18D004A64B2 /* Dynamo.app */ = {isa = PBXFileReference; explicitFileType = wrapper.application; includeInIndex = 0; path = Dynamo.app; sourceTree = BUILT_PRODUCTS_DIR; };
 		ADE13D5E2DF5C18F004A64B2 /* SportAppTests.xctest */ = {isa = PBXFileReference; explicitFileType = wrapper.cfbundle; includeInIndex = 0; path = SportAppTests.xctest; sourceTree = BUILT_PRODUCTS_DIR; };
 		ADE13D682DF5C18F004A64B2 /* SportAppUITests.xctest */ = {isa = PBXFileReference; explicitFileType = wrapper.cfbundle; includeInIndex = 0; path = SportAppUITests.xctest; sourceTree = BUILT_PRODUCTS_DIR; };
 /* End PBXFileReference section */
@@ -93,7 +93,7 @@
 		ADE13D4D2DF5C18D004A64B2 /* Products */ = {
 			isa = PBXGroup;
 			children = (
-				ADE13D4C2DF5C18D004A64B2 /* SportApp.app */,
+				ADE13D4C2DF5C18D004A64B2 /* Dynamo.app */,
 				ADE13D5E2DF5C18F004A64B2 /* SportAppTests.xctest */,
 				ADE13D682DF5C18F004A64B2 /* SportAppUITests.xctest */,
 			);
@@ -110,9 +110,9 @@
 /* End PBXGroup section */
 
 /* Begin PBXNativeTarget section */
-		ADE13D4B2DF5C18D004A64B2 /* SportApp */ = {
+		ADE13D4B2DF5C18D004A64B2 /* Dynamo */ = {
 			isa = PBXNativeTarget;
-			buildConfigurationList = ADE13D722DF5C18F004A64B2 /* Build configuration list for PBXNativeTarget "SportApp" */;
+			buildConfigurationList = ADE13D722DF5C18F004A64B2 /* Build configuration list for PBXNativeTarget "Dynamo" */;
 			buildPhases = (
 				ADE13D482DF5C18D004A64B2 /* Sources */,
 				ADE13D492DF5C18D004A64B2 /* Frameworks */,
@@ -125,13 +125,13 @@
 			fileSystemSynchronizedGroups = (
 				ADE13D952DF5D0D4004A64B2 /* SportApp */,
 			);
-			name = SportApp;
+			name = Dynamo;
 			packageProductDependencies = (
 				ADE6C8C02E64B4B6009CE927 /* FirebaseAnalytics */,
 				ADE6C8C22E64B4DC009CE927 /* FirebaseCore */,
 			);
 			productName = SportApp;
-			productReference = ADE13D4C2DF5C18D004A64B2 /* SportApp.app */;
+			productReference = ADE13D4C2DF5C18D004A64B2 /* Dynamo.app */;
 			productType = "com.apple.product-type.application";
 		};
 		ADE13D5D2DF5C18F004A64B2 /* SportAppTests */ = {
@@ -220,7 +220,7 @@
 			projectDirPath = "";
 			projectRoot = "";
 			targets = (
-				ADE13D4B2DF5C18D004A64B2 /* SportApp */,
+				ADE13D4B2DF5C18D004A64B2 /* Dynamo */,
 				ADE13D5D2DF5C18F004A64B2 /* SportAppTests */,
 				ADE13D672DF5C18F004A64B2 /* SportAppUITests */,
 			);
@@ -278,12 +278,12 @@
 /* Begin PBXTargetDependency section */
 		ADE13D602DF5C18F004A64B2 /* PBXTargetDependency */ = {
 			isa = PBXTargetDependency;
-			target = ADE13D4B2DF5C18D004A64B2 /* SportApp */;
+			target = ADE13D4B2DF5C18D004A64B2 /* Dynamo */;
 			targetProxy = ADE13D5F2DF5C18F004A64B2 /* PBXContainerItemProxy */;
 		};
 		ADE13D6A2DF5C18F004A64B2 /* PBXTargetDependency */ = {
 			isa = PBXTargetDependency;
-			target = ADE13D4B2DF5C18D004A64B2 /* SportApp */;
+			target = ADE13D4B2DF5C18D004A64B2 /* Dynamo */;
 			targetProxy = ADE13D692DF5C18F004A64B2 /* PBXContainerItemProxy */;
 		};
 /* End PBXTargetDependency section */
@@ -419,6 +419,7 @@
 				DEVELOPMENT_TEAM = AHGDNDBQGJ;
 				ENABLE_PREVIEWS = YES;
 				GENERATE_INFOPLIST_FILE = YES;
+				INFOPLIST_KEY_CFBundleDisplayName = Dynamo;
 				INFOPLIST_KEY_UIApplicationSceneManifest_Generation = YES;
 				INFOPLIST_KEY_UIApplicationSupportsIndirectInputEvents = YES;
 				INFOPLIST_KEY_UILaunchScreen_Generation = YES;
@@ -443,11 +444,13 @@
 				ASSETCATALOG_COMPILER_APPICON_NAME = AppIcon;
 				ASSETCATALOG_COMPILER_GLOBAL_ACCENT_COLOR_NAME = AccentColor;
 				ASSETCATALOG_COMPILER_INCLUDE_ALL_APPICON_ASSETS = YES;
+				CODE_SIGN_IDENTITY = "Apple Development";
 				CODE_SIGN_STYLE = Automatic;
 				CURRENT_PROJECT_VERSION = 1;
 				DEVELOPMENT_TEAM = AHGDNDBQGJ;
 				ENABLE_PREVIEWS = YES;
 				GENERATE_INFOPLIST_FILE = YES;
+				INFOPLIST_KEY_CFBundleDisplayName = Dynamo;
 				INFOPLIST_KEY_UIApplicationSceneManifest_Generation = YES;
 				INFOPLIST_KEY_UIApplicationSupportsIndirectInputEvents = YES;
 				INFOPLIST_KEY_UILaunchScreen_Generation = YES;
@@ -460,6 +463,7 @@
 				MARKETING_VERSION = 1.0;
 				PRODUCT_BUNDLE_IDENTIFIER = com.dynamoapp.dynamo;
 				PRODUCT_NAME = "$(TARGET_NAME)";
+				PROVISIONING_PROFILE_SPECIFIER = "";
 				SWIFT_EMIT_LOC_STRINGS = YES;
 				SWIFT_VERSION = 5.0;
 				TARGETED_DEVICE_FAMILY = "1,2";
@@ -546,7 +550,7 @@
 			defaultConfigurationIsVisible = 0;
 			defaultConfigurationName = Release;
 		};
-		ADE13D722DF5C18F004A64B2 /* Build configuration list for PBXNativeTarget "SportApp" */ = {
+		ADE13D722DF5C18F004A64B2 /* Build configuration list for PBXNativeTarget "Dynamo" */ = {
 			isa = XCConfigurationList;
 			buildConfigurations = (
 				ADE13D732DF5C18F004A64B2 /* Debug */,
