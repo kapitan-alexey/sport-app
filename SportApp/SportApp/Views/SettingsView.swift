@@ -7,7 +7,7 @@ struct SettingsView: View {
     @State private var cacheStatus = CacheStatus(hasCache: false, isValid: false, lastUpdate: nil, size: "0 Б", eventCount: 0)
     
     var body: some View {
-        NavigationView {
+        NavigationStack {
             ZStack {
                 Color.black.ignoresSafeArea(.all)
                 

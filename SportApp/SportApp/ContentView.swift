@@ -44,7 +44,7 @@ struct ContentView: View {
         VStack(spacing: 0) {
             // Основной контент
             if selectedTab == 0 {
-                NavigationView {
+                NavigationStack {
                     ZStack {
                         Color.black.ignoresSafeArea(.all)
                             .onTapGesture {
@@ -231,7 +231,7 @@ struct CacheSettingsView: View {
     @Environment(\.dismiss) private var dismiss
     
     var body: some View {
-        NavigationView {
+        NavigationStack {
             ZStack {
                 Color.black.ignoresSafeArea(.all)
                 
@@ -379,7 +379,7 @@ struct FavoritesView: View {
     @State private var isKeyboardActive = false
     
     var body: some View {
-        NavigationView {
+        NavigationStack {
             ZStack {
                 Color.black.ignoresSafeArea()
                 

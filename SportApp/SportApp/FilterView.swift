@@ -101,7 +101,7 @@ struct FilterView: View {
     }
     
     var body: some View {
-        NavigationView {
+        NavigationStack {
             ZStack {
                 Color.black.ignoresSafeArea(.all)
                     .onTapGesture {

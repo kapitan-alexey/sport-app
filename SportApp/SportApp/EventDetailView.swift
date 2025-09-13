@@ -60,7 +60,7 @@ struct EventFilesView: View {
     @State private var selectedFileURL: URL?
     
     var body: some View {
-        NavigationView {
+        NavigationStack {
             ZStack {
                 Color.black.ignoresSafeArea()
                 
